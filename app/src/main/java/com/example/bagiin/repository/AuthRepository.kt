@@ -17,15 +17,17 @@ class AuthRepository {
     ): Result<String> {
 
         return try {
+            val cleanEmail = email.trim()
+            val cleanPassword = password.trim()
 
             client.auth.signUpWith(Email) {
-                this.email = email
-                this.password = password
+                this.email = cleanEmail
+                this.password = cleanPassword
             }
 
             val user = User(
                 nama = nama,
-                email = email
+                email = cleanEmail
             )
 
             client.from("users").insert(user)
@@ -43,10 +45,12 @@ class AuthRepository {
     ): Result<String> {
 
         return try {
+            val cleanEmail = email.trim()
+            val cleanPassword = password.trim()
 
             client.auth.signInWith(Email) {
-                this.email = email
-                this.password = password
+                this.email = cleanEmail
+                this.password = cleanPassword
             }
 
             Result.success("Login berhasil")

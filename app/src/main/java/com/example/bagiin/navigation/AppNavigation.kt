@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.bagiin.ui.screen.DashboardScreen
 import com.example.bagiin.ui.screen.LoginScreen
+import com.example.bagiin.ui.screen.ProfileScreen
 import com.example.bagiin.ui.screen.RegisterScreen
 
 @Composable
@@ -16,13 +18,20 @@ fun AppNavigation() {
         navController = navController,
         startDestination = "login"
     ) {
-
-        composable("login") {
-            LoginScreen()
+        composable(route = "login") {
+            LoginScreen(navController = navController)
         }
 
-        composable("register") {
-            RegisterScreen()
+        composable(route = "register") {
+            RegisterScreen(navController = navController)
+        }
+
+        composable(route = "dashboard") {
+            DashboardScreen(navController = navController)
+        }
+
+        composable(route = "profile") {
+            ProfileScreen(navController = navController)
         }
     }
 }
