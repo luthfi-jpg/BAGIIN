@@ -13,9 +13,9 @@ class AuthRepository {
     suspend fun register(
         nama: String,
         email: String,
-        password: String
+        password: String,
+        noHp: String = ""
     ): Result<String> {
-
         return try {
             val cleanEmail = email.trim()
             val cleanPassword = password.trim()
@@ -27,7 +27,8 @@ class AuthRepository {
 
             val user = User(
                 nama = nama,
-                email = cleanEmail
+                email = cleanEmail,
+                no_hp = noHp
             )
 
             client.from("users").insert(user)
@@ -43,7 +44,6 @@ class AuthRepository {
         email: String,
         password: String
     ): Result<String> {
-
         return try {
             val cleanEmail = email.trim()
             val cleanPassword = password.trim()

@@ -8,6 +8,7 @@ import com.example.bagiin.ui.screen.DashboardScreen
 import com.example.bagiin.ui.screen.LoginScreen
 import com.example.bagiin.ui.screen.ProfileScreen
 import com.example.bagiin.ui.screen.RegisterScreen
+import com.example.bagiin.ui.screen.WelcomeScreen
 
 @Composable
 fun AppNavigation() {
@@ -16,20 +17,20 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = "welcome"
     ) {
+        composable(route = "welcome") {
+            WelcomeScreen(navController = navController)
+        }
         composable(route = "login") {
             LoginScreen(navController = navController)
         }
-
         composable(route = "register") {
             RegisterScreen(navController = navController)
         }
-
         composable(route = "dashboard") {
             DashboardScreen(navController = navController)
         }
-
         composable(route = "profile") {
             ProfileScreen(navController = navController)
         }

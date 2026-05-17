@@ -16,27 +16,15 @@ class AuthViewModel : ViewModel() {
     fun register(
         nama: String,
         email: String,
-        password: String
+        password: String,
+        noHp: String = ""
     ) {
         viewModelScope.launch {
-
             loading.value = true
-
-            val result = repository.register(
-                nama,
-                email,
-                password
-            )
-
+            val result = repository.register(nama, email, password, noHp)
             loading.value = false
-
-            result.onSuccess {
-                message.value = it
-            }
-
-            result.onFailure {
-                message.value = it.message ?: "Terjadi error"
-            }
+            result.onSuccess { message.value = it }
+            result.onFailure { message.value = it.message ?: "Terjadi error" }
         }
     }
 
@@ -45,23 +33,11 @@ class AuthViewModel : ViewModel() {
         password: String
     ) {
         viewModelScope.launch {
-
             loading.value = true
-
-            val result = repository.login(
-                email,
-                password
-            )
-
+            val result = repository.login(email, password)
             loading.value = false
-
-            result.onSuccess {
-                message.value = it
-            }
-
-            result.onFailure {
-                message.value = it.message ?: "Terjadi error"
-            }
+            result.onSuccess { message.value = it }
+            result.onFailure { message.value = it.message ?: "Terjadi error" }
         }
     }
 }
