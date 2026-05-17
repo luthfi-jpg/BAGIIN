@@ -60,6 +60,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("io.github.jan-tennert.supabase:postgrest-kt:3.6.0")
     implementation("io.github.jan-tennert.supabase:auth-kt:3.6.0")
     implementation("io.github.jan-tennert.supabase:storage-kt:3.6.0")
