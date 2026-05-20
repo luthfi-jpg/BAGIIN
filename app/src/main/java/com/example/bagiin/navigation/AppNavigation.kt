@@ -1,23 +1,22 @@
 package com.example.bagiin.navigation
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.bagiin.ui.screen.DashboardScreen
-import com.example.bagiin.ui.screen.LoginScreen
-import com.example.bagiin.ui.screen.ProfileScreen
-import com.example.bagiin.ui.screen.RegisterScreen
-import com.example.bagiin.ui.screen.WelcomeScreen
+import com.example.bagiin.data.SupabaseInstance
+import com.example.bagiin.ui.screen.*
+import io.github.jan.supabase.auth.auth
 
 @Composable
 fun AppNavigation() {
-
     val navController = rememberNavController()
+    val session = SupabaseInstance.client.auth.currentSessionOrNull()
+    val startDestination = if (session != null) "dashboard" else "welcome"
 
     NavHost(
         navController = navController,
-        startDestination = "welcome"
+        startDestination = startDestination
     ) {
         composable(route = "welcome") {
             WelcomeScreen(navController = navController)
