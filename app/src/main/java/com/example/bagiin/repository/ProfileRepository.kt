@@ -12,18 +12,23 @@ class ProfileRepository {
 
     suspend fun getProfile(): Result<User> {
         return try {
-            val userId = client.auth.currentUserOrNull()?.id
+            val userEmail = client.auth.currentUserOrNull()?.email
                 ?: return Result.failure(Exception("User tidak ditemukan"))
 
-            val user = client.from("users")
+            val result = client.from("users")
                 .select(Columns.ALL) {
                     filter {
-                        eq("id_user", userId)
+                        eq("email", userEmail)
                     }
                 }
-                .decodeSingle<User>()
+                .decodeList<User>()
 
-            Result.success(user)
+            if (result.isEmpty()) {
+                Result.failure(Exception("Data user tidak ditemukan"))
+            } else {
+                Result.success(result.first())
+            }
+
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -31,7 +36,7 @@ class ProfileRepository {
 
     suspend fun updateProfile(nama: String, noHp: String, alamat: String): Result<String> {
         return try {
-            val userId = client.auth.currentUserOrNull()?.id
+            val userEmail = client.auth.currentUserOrNull()?.email
                 ?: return Result.failure(Exception("User tidak ditemukan"))
 
             client.from("users").update(
@@ -42,7 +47,7 @@ class ProfileRepository {
                 }
             ) {
                 filter {
-                    eq("id_user", userId)
+                    eq("email", userEmail)
                 }
             }
 
