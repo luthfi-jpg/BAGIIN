@@ -20,12 +20,15 @@ class AuthRepository {
             val cleanEmail = email.trim()
             val cleanPassword = password.trim()
 
-            client.auth.signUpWith(Email) {
+            val authResult = client.auth.signUpWith(Email) {
                 this.email = cleanEmail
                 this.password = cleanPassword
             }
 
+            val userId = client.auth.currentUserOrNull()?.id ?: ""
+
             val user = User(
+                id_user = userId,
                 nama = nama,
                 email = cleanEmail,
                 no_hp = noHp

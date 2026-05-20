@@ -24,8 +24,13 @@ class ProfileViewModel : ViewModel() {
         viewModelScope.launch {
             loading.value = true
             val result = repository.getProfile()
-            result.onSuccess { user.value = it }
-            result.onFailure { message.value = it.message ?: "Gagal memuat profil" }
+            result.onSuccess {
+                user.value = it
+                message.value = ""
+            }
+            result.onFailure {
+                message.value = it.message ?: "Gagal memuat profil"
+            }
             loading.value = false
         }
     }
@@ -37,10 +42,12 @@ class ProfileViewModel : ViewModel() {
             result.onSuccess {
                 message.value = it
                 isEditing.value = false
-                loadProfile()
+                loadProfile() // <- reload data setelah update
             }
-            result.onFailure { message.value = it.message ?: "Gagal update profil" }
-            loading.value = false
+            result.onFailure {
+                message.value = it.message ?: "Gagal update profil"
+                loading.value = false
+            }
         }
     }
 }
