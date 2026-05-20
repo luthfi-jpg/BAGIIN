@@ -44,7 +44,6 @@ fun ProfileScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showNotifDialog by remember { mutableStateOf(false) }
 
-    // Edit Profile Dialog
     if (showEditProfileDialog) {
         EditProfileDialog(
             currentNama = user?.nama ?: "",
@@ -57,7 +56,6 @@ fun ProfileScreen(
         )
     }
 
-    // Address Dialog
     if (showAddressDialog) {
         EditAddressDialog(
             currentAlamat = user?.alamat ?: "",
@@ -69,7 +67,6 @@ fun ProfileScreen(
         )
     }
 
-    // Logout Confirmation Dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
@@ -103,7 +100,6 @@ fun ProfileScreen(
         )
     }
 
-    // Notification Dialog
     if (showNotifDialog) {
         AlertDialog(
             onDismissRequest = { showNotifDialog = false },
@@ -192,7 +188,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Profile card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -207,7 +202,7 @@ fun ProfileScreen(
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Avatar with edit button
+                    // Avatar
                     Box {
                         Surface(
                             modifier = Modifier
@@ -235,7 +230,7 @@ fun ProfileScreen(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.Edit,
-                                    contentDescription = "Edit Photo",
+                                    contentDescription = "Edit",
                                     tint = Color.White,
                                     modifier = Modifier.size(14.dp)
                                 )
@@ -248,14 +243,34 @@ fun ProfileScreen(
                     if (loading) {
                         CircularProgressIndicator(color = BagiinGreen, modifier = Modifier.size(24.dp))
                     } else {
+                        // Nama
                         Text(
                             text = user?.nama?.ifEmpty { email.substringBefore("@") } ?: email.substringBefore("@"),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = BagiinDarkText
                         )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // No HP
+                        if (!user?.no_hp.isNullOrEmpty()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Phone, contentDescription = null, tint = BagiinGreyText, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = user?.no_hp ?: "",
+                                    fontSize = 13.sp,
+                                    color = BagiinGreyText
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                        }
+
+                        // Alamat
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.LocationOn, contentDescription = null, tint = BagiinGreyText, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = user?.alamat?.ifEmpty { "No address set" } ?: "No address set",
                                 fontSize = 13.sp,
@@ -281,9 +296,7 @@ fun ProfileScreen(
                             Text("Donations", fontSize = 12.sp, color = BagiinGreyText)
                         }
                         Divider(
-                            modifier = Modifier
-                                .height(40.dp)
-                                .width(1.dp),
+                            modifier = Modifier.height(40.dp).width(1.dp),
                             color = Color(0xFFE0E0E0)
                         )
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -296,7 +309,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Menu items
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
