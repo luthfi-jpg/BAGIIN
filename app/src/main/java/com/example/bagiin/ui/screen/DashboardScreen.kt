@@ -3,10 +3,7 @@ package com.example.bagiin.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -17,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,7 +25,6 @@ import io.github.jan.supabase.auth.auth
 @Composable
 fun DashboardScreen(navController: NavController) {
     val email = SupabaseInstance.client.auth.currentUserOrNull()?.email ?: ""
-    val nama = email.substringBefore("@")
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("All") }
     val categories = listOf("All", "Clothing", "Books", "Electronics", "Food", "Others")
@@ -53,7 +48,7 @@ fun DashboardScreen(navController: NavController) {
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = { navController.navigate("upload_donasi") },
                     icon = { Icon(Icons.Default.Add, contentDescription = "Upload") },
                     label = { Text("Upload", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
@@ -62,7 +57,7 @@ fun DashboardScreen(navController: NavController) {
                 )
                 NavigationBarItem(
                     selected = false,
-                    onClick = { },
+                    onClick = { navController.navigate("riwayat_donasi") },
                     icon = { Icon(Icons.Default.List, contentDescription = "History") },
                     label = { Text("History", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
@@ -143,7 +138,7 @@ fun DashboardScreen(navController: NavController) {
                     )
                 )
                 IconButton(
-                    onClick = { },
+                    onClick = { navController.navigate("daftar_barang") },
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -199,7 +194,8 @@ fun DashboardScreen(navController: NavController) {
                     .height(220.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF2C5F4A)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                onClick = { navController.navigate("daftar_barang") }
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Box(
@@ -241,6 +237,27 @@ fun DashboardScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Section title
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Recent Donations",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BagiinDarkText
+                )
+                TextButton(onClick = { navController.navigate("daftar_barang") }) {
+                    Text("See all", color = BagiinGreen, fontSize = 13.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Grid Items
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Row(
@@ -252,14 +269,16 @@ fun DashboardScreen(navController: NavController) {
                         title = "Fiction Books",
                         description = "Bundle of 5 books.",
                         condition = "Good",
-                        conditionColor = BagiinGreyText
+                        conditionColor = BagiinGreyText,
+                        onClick = { navController.navigate("klaim_barang") }
                     )
                     DonationItemCard(
                         modifier = Modifier.weight(1f),
                         title = "Sony Headphones",
                         description = "Working perfectly.",
                         condition = "Used",
-                        conditionColor = Color(0xFF1976D2)
+                        conditionColor = Color(0xFF1976D2),
+                        onClick = { navController.navigate("klaim_barang") }
                     )
                 }
             }
@@ -275,13 +294,15 @@ fun DonationItemCard(
     title: String,
     description: String,
     condition: String,
-    conditionColor: Color
+    conditionColor: Color,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = BagiinGrey),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        onClick = onClick
     ) {
         Column {
             Box(

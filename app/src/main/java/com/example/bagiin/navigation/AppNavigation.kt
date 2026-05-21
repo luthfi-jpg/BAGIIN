@@ -33,5 +33,20 @@ fun AppNavigation() {
         composable(route = "profile") {
             ProfileScreen(navController = navController)
         }
+        composable(route = "upload_donasi") {
+            UploadDonasiScreen(navController = navController)
+        }
+        composable(route = "daftar_barang") {
+            DaftarBarangScreen(navController = navController)
+        }
+        composable(route = "klaim_barang") {
+            KlaimBarangScreen(navController = navController)
+        }
+        composable(route = "riwayat_donasi") {
+            RiwayatDonasiScreen(navController = navController)
+        }
+        composable(route = "jadwal_penyerahan") {
+            JadwalPenyerahanScreen(navController = navController)
+        }
     }
 }
