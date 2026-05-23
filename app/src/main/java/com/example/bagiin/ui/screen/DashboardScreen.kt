@@ -21,6 +21,8 @@ import androidx.navigation.NavController
 import com.example.bagiin.data.SupabaseInstance
 import com.example.bagiin.ui.theme.*
 import io.github.jan.supabase.auth.auth
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun DashboardScreen(navController: NavController) {
@@ -270,7 +272,10 @@ fun DashboardScreen(navController: NavController) {
                         description = "Bundle of 5 books.",
                         condition = "Good",
                         conditionColor = BagiinGreyText,
-                        onClick = { navController.navigate("klaim_barang") }
+                        onClick = {
+                            val encodedTitle = URLEncoder.encode("Fiction Books", StandardCharsets.UTF_8.toString())
+                            navController.navigate("klaim_barang/$encodedTitle")
+                        }
                     )
                     DonationItemCard(
                         modifier = Modifier.weight(1f),
@@ -278,7 +283,10 @@ fun DashboardScreen(navController: NavController) {
                         description = "Working perfectly.",
                         condition = "Used",
                         conditionColor = Color(0xFF1976D2),
-                        onClick = { navController.navigate("klaim_barang") }
+                        onClick = {
+                            val encodedTitle = URLEncoder.encode("Sony Headphones", StandardCharsets.UTF_8.toString())
+                            navController.navigate("klaim_barang/$encodedTitle")
+                        }
                     )
                 }
             }

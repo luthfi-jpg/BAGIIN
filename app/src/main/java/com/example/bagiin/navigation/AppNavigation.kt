@@ -1,9 +1,11 @@
 package com.example.bagiin.navigation
 
 import androidx.compose.runtime.*
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.bagiin.data.SupabaseInstance
 import com.example.bagiin.ui.screen.*
 import io.github.jan.supabase.auth.auth
@@ -39,14 +41,28 @@ fun AppNavigation() {
         composable(route = "daftar_barang") {
             DaftarBarangScreen(navController = navController)
         }
-        composable(route = "klaim_barang") {
-            KlaimBarangScreen(navController = navController)
-        }
+
         composable(route = "riwayat_donasi") {
             RiwayatDonasiScreen(navController = navController)
         }
-        composable(route = "jadwal_penyerahan") {
-            JadwalPenyerahanScreen(navController = navController)
+
+
+        // UPDATE 1: Add argument to klaim_barang
+        composable(
+            route = "klaim_barang/{itemTitle}",
+            arguments = listOf(navArgument("itemTitle") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val itemTitle = backStackEntry.arguments?.getString("itemTitle") ?: "Unknown Item"
+            KlaimBarangScreen(navController = navController, itemTitle = itemTitle)
+        }
+
+        // UPDATE 2: Add argument to jadwal_penyerahan
+        composable(
+            route = "jadwal_penyerahan/{itemTitle}",
+            arguments = listOf(navArgument("itemTitle") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val itemTitle = backStackEntry.arguments?.getString("itemTitle") ?: "Unknown Item"
+            JadwalPenyerahanScreen(navController = navController, itemTitle = itemTitle)
         }
     }
 }

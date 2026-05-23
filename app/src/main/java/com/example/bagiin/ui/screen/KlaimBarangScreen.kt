@@ -12,9 +12,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bagiin.ui.theme.*
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
-fun KlaimBarangScreen(navController: NavController) {
+fun KlaimBarangScreen(navController: NavController, itemTitle: String) {
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -23,10 +25,37 @@ fun KlaimBarangScreen(navController: NavController) {
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = BagiinGreen)
             }
-            Text("Klaim Barang Donasi", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = BagiinDarkText)
+            Text(
+                "Klaim Barang Donasi",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = BagiinDarkText
+            )
         }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+
+        Box(contentAlignment = Alignment.Center) {
             Text("Fitur Klaim Barang\n(Dalam Pengembangan)", color = BagiinGreyText)
+        }
+
+        Button(
+            onClick = {
+                // UPDATE: Encode and pass to the next screen
+                val encodedTitle = URLEncoder.encode(itemTitle, StandardCharsets.UTF_8.toString())
+                navController.navigate("jadwal_penyerahan/$encodedTitle")
+            },
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+
+            colors = ButtonDefaults.buttonColors(
+                containerColor = BagiinGreen
+            ),
+            ) {
+
+            Text(
+                text = "Claim This Item"
+            )
         }
     }
 }
