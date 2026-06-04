@@ -35,10 +35,10 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    fun updateProfile(nama: String, noHp: String, alamat: String) {
+    fun updateProfile(nama: String, noHp: String, alamat: String, fotoProfil: String? = null) {
         viewModelScope.launch {
             loading.value = true
-            val result = repository.updateProfile(nama, noHp, alamat)
+            val result = repository.updateProfile(nama, noHp, alamat, fotoProfil)
             result.onSuccess {
                 message.value = it
                 isEditing.value = false
@@ -46,6 +46,23 @@ class ProfileViewModel : ViewModel() {
             }
             result.onFailure {
                 message.value = it.message ?: "Gagal update profil"
+                loading.value = false
+            }
+        }
+    }
+
+    fun uploadAvatar(byteArray: ByteArray, fileName: String) {
+        viewModelScope.launch {
+            loading.value = true
+            val uploadResult = repository.uploadAvatar(byteArray, fileName)
+            uploadResult.onSuccess { url ->
+                val currentUser = user.value
+                if (currentUser != null) {
+                    updateProfile(currentUser.nama, currentUser.no_hp ?: "", currentUser.alamat ?: "", url)
+                }
+            }
+            uploadResult.onFailure {
+                message.value = it.message ?: "Gagal upload foto"
                 loading.value = false
             }
         }

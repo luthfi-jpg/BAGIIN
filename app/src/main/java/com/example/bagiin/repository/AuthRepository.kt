@@ -79,7 +79,19 @@ class AuthRepository {
             Result.success("Login berhasil")
 
         } catch (e: Exception) {
-            Result.failure(e)
+            e.printStackTrace()
+            val errorBody = e.message ?: ""
+            val errorMessage = when {
+                errorBody.contains("invalid login credentials", ignoreCase = true) || 
+                errorBody.contains("invalid email or password", ignoreCase = true) -> 
+                    "Email atau password salah. Silakan periksa kembali."
+                
+                errorBody.contains("network", ignoreCase = true) -> 
+                    "Koneksi internet bermasalah. Coba lagi."
+                
+                else -> "Email atau password salah. Silakan periksa kembali."
+            }
+            Result.failure(Exception(errorMessage))
         }
     }
 }

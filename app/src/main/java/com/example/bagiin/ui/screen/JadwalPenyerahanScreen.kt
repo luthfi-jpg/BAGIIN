@@ -220,7 +220,7 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                             .background(Color(0xFF6B8E78)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Menu, contentDescription = null, tint = Color.White)
+                        Icon(Icons.Default.Inventory, contentDescription = null, tint = Color.White)
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))

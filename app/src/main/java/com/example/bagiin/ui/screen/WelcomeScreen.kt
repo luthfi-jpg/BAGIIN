@@ -1,5 +1,6 @@
 package com.example.bagiin.ui.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -35,7 +36,7 @@ fun WelcomeScreen(navController: NavController) {
 
         // Logo
         Row(verticalAlignment = Alignment.CenterVertically) {
-            androidx.compose.foundation.Image(
+            Image(
                 painter = androidx.compose.ui.res.painterResource(id = com.example.bagiin.R.drawable.ic_bagiin_logo),
                 contentDescription = "Logo Bagiin",
                 modifier = Modifier.height(40.dp),

@@ -5,6 +5,7 @@ import com.example.bagiin.model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.storage.storage
 
 class ProfileRepository {
 
@@ -34,7 +35,7 @@ class ProfileRepository {
         }
     }
 
-    suspend fun updateProfile(nama: String, noHp: String, alamat: String): Result<String> {
+    suspend fun updateProfile(nama: String, noHp: String, alamat: String, fotoProfil: String? = null): Result<String> {
         return try {
             val userEmail = client.auth.currentUserOrNull()?.email
                 ?: return Result.failure(Exception("User tidak ditemukan"))
@@ -44,6 +45,9 @@ class ProfileRepository {
                     User::nama setTo nama
                     User::no_hp setTo noHp
                     User::alamat setTo alamat
+                    if (fotoProfil != null) {
+                        User::foto_profil setTo fotoProfil
+                    }
                 }
             ) {
                 filter {
@@ -52,6 +56,22 @@ class ProfileRepository {
             }
 
             Result.success("Profil berhasil diupdate")
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadAvatar(byteArray: ByteArray, fileName: String): Result<String> {
+        return try {
+            val bucket = client.storage.from("avatars")
+            val path = "public/$fileName"
+            
+            bucket.upload(path, byteArray) {
+                upsert = true
+            }
+            
+            val url = bucket.publicUrl(path)
+            Result.success(url)
         } catch (e: Exception) {
             Result.failure(e)
         }
