@@ -9,8 +9,8 @@ import com.example.bagiin.BuildConfig
 object SupabaseInstance {
 
     val client = createSupabaseClient(
-        supabaseUrl = "https://lsorldyvsoadkhtcnqer.supabase.co/",
-        supabaseKey = "sb_publishable_6sb2EuQECd-WOAmfpwTrVA_wEoN2vX8"
+        supabaseUrl = "https://goonlhhgstkqxmhaoqbc.supabase.co",
+        supabaseKey = "sb_publishable_SMsxzIylSQ62UmiYQPcUaA_HtfHPzgo"
     ) {
         install(Auth)
         install(Postgrest)

@@ -35,21 +35,11 @@ fun WelcomeScreen(navController: NavController) {
 
         // Logo
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                shape = CircleShape,
-                color = BagiinGreen,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("🤲", fontSize = 16.sp)
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Bagiin",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = BagiinGreen
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = com.example.bagiin.R.drawable.ic_bagiin_logo),
+                contentDescription = "Logo Bagiin",
+                modifier = Modifier.height(40.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
         }
 

@@ -14,12 +14,18 @@ import io.github.jan.supabase.auth.auth
 fun AppNavigation() {
     val navController = rememberNavController()
     val session = SupabaseInstance.client.auth.currentSessionOrNull()
-    val startDestination = if (session != null) "dashboard" else "welcome"
+    val startDestination = if (session != null) "dashboard" else "login"
 
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(route = "onboarding_donate") {
+            OnboardingDonateScreen(
+                onSkipClick = { navController.navigate("login") },
+                onNextClick = { navController.navigate("login") }
+            )
+        }
         composable(route = "welcome") {
             WelcomeScreen(navController = navController)
         }

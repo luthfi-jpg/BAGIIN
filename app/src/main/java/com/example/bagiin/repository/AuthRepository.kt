@@ -20,26 +20,46 @@ class AuthRepository {
             val cleanEmail = email.trim()
             val cleanPassword = password.trim()
 
-            val authResult = client.auth.signUpWith(Email) {
+            // 1. Sign up ke Supabase Auth
+            client.auth.signUpWith(Email) {
                 this.email = cleanEmail
                 this.password = cleanPassword
             }
 
-            val userId = client.auth.currentUserOrNull()?.id ?: ""
+            // 2. Ambil ID User yang baru didaftarkan
+            // Jika "Confirm Email" aktif di Supabase, currentUserOrNull() akan bernilai null
+            // karena session belum dibuat sampai email dikonfirmasi.
+            val userId = client.auth.currentUserOrNull()?.id
 
-            val user = User(
-                id_user = userId,
-                nama = nama,
-                email = cleanEmail,
-                no_hp = noHp
-            )
-
-            client.from("users").insert(user)
-
-            Result.success("Register berhasil")
+            if (userId != null) {
+                // 3. Masukkan data ke tabel 'users'
+                val user = User(
+                    id_user = userId,
+                    nama = nama,
+                    email = cleanEmail,
+                    no_hp = noHp
+                )
+                client.from("users").insert(user)
+                Result.success("Register berhasil")
+            } else {
+                // Jika userId null, biasanya karena email confirmation menyala
+                Result.success("Register berhasil! Silakan cek email untuk verifikasi.")
+            }
 
         } catch (e: Exception) {
-            Result.failure(e)
+            e.printStackTrace()
+            val errorBody = e.message ?: ""
+            val errorMessage = when {
+                errorBody.contains("user_already_exists", ignoreCase = true) || 
+                errorBody.contains("already registered", ignoreCase = true) -> 
+                    "Email sudah terdaftar. Silakan gunakan email lain."
+                
+                errorBody.contains("network", ignoreCase = true) -> 
+                    "Koneksi internet bermasalah. Coba lagi."
+                
+                else -> "Terjadi kesalahan saat registrasi"
+            }
+            Result.failure(Exception(errorMessage))
         }
     }
 
