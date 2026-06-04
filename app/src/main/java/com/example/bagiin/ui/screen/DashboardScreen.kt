@@ -293,7 +293,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Donasi Seragam\nSekolah",
+                                text = "Donasi Barang yang\ntidak digunakan",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = OnPrimary,
@@ -303,10 +303,10 @@ fun DashboardScreen(
                             Surface(
                                 shape = RoundedCornerShape(9999.dp),
                                 color = SurfaceLowest,
-                                onClick = { navController.navigate("daftar_barang") }
+                                onClick = { navController.navigate("upload_donasi") }
                             ) {
                                 Text(
-                                    text = "Ikut Sekarang",
+                                    text = "Donasi",
                                     fontSize = 12.sp,
                                     color = Primary,
                                     fontWeight = FontWeight.Bold,
@@ -350,7 +350,7 @@ fun DashboardScreen(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                     onClick = {
                         val encodedTitle = URLEncoder.encode(item.title, StandardCharsets.UTF_8.toString())
-                        navController.navigate("klaim_barang/$encodedTitle")
+                        navController.navigate("detail_barang/$encodedTitle")
                     }
                 )
             }
