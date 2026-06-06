@@ -15,16 +15,44 @@ class HistoryViewModel : ViewModel() {
     private val _history =
         MutableStateFlow<List<HistoryItem>>(emptyList())
 
-    val history: StateFlow<List<HistoryItem>> = _history
+    val history: StateFlow<List<HistoryItem>>
+            = _history
 
     init {
         loadHistory()
     }
 
     fun loadHistory() {
+
         viewModelScope.launch {
+
             try {
-                _history.value = repository.getHistory()
+
+                _history.value =
+                    repository.getHistory()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun addHistory(
+        idUser: String,
+        aktivitas: String
+    ) {
+
+        viewModelScope.launch {
+
+            try {
+
+                repository.insertHistory(
+                    idUser,
+                    aktivitas
+                )
+
+                loadHistory()
+
             } catch (e: Exception) {
                 e.printStackTrace()
             }

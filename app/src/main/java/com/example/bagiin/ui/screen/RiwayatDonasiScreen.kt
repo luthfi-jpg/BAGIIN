@@ -26,15 +26,21 @@ fun RiwayatDonasiScreen(
 
     val history by viewModel.history.collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
 
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             IconButton(
-                onClick = { navController.popBackStack() }
+                onClick = {
+                    navController.popBackStack()
+                }
             ) {
+
                 Icon(
                     Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -56,6 +62,7 @@ fun RiwayatDonasiScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
+
                 Text(
                     text = "Belum ada riwayat donasi",
                     color = BagiinGreyText
@@ -65,7 +72,9 @@ fun RiwayatDonasiScreen(
         } else {
 
             LazyColumn(
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
             ) {
 
                 items(history) { item ->

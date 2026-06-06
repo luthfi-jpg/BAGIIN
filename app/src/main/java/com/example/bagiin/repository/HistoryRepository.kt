@@ -9,11 +9,30 @@ import io.github.jan.supabase.postgrest.query.order
 class HistoryRepository {
 
     suspend fun getHistory(): List<HistoryItem> {
+
         return SupabaseInstance.client
             .from("riwayat")
             .select {
-                order("tanggal", Order.DESCENDING)
+                order(
+                    column = "tanggal",
+                    order = Order.DESCENDING
+                )
             }
             .decodeList<HistoryItem>()
+    }
+
+    suspend fun insertHistory(
+        idUser: String,
+        aktivitas: String
+    ) {
+
+        val data = mapOf(
+            "id_user" to idUser,
+            "aktivitas" to aktivitas
+        )
+
+        SupabaseInstance.client
+            .from("riwayat")
+            .insert(data)
     }
 }
