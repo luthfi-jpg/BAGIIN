@@ -9,5 +9,6 @@ data class User(
     val email: String = "",
     val no_hp: String? = null,
     val alamat: String? = null,
-    val foto_profil: String? = null
+    val foto_profil: String? = null,
+    val rating: Double? = 0.0
 )

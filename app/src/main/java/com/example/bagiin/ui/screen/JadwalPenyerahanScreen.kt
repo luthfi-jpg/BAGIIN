@@ -279,15 +279,6 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String, view
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = { /* notification */ }) {
-                        Icon(
-                            Icons.Outlined.Notifications,
-                            contentDescription = "Notifications",
-                            tint = LGOnBackground
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = LGSurfaceLowest
                 )
@@ -409,22 +400,6 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String, view
                             color = LGOnBackground,
                             lineHeight = 20.sp
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Outlined.Person,
-                                contentDescription = null,
-                                tint = LGSuccessGreen,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Donated by Alex Chen",
-                                fontSize = 12.sp,
-                                color = LGSuccessGreen,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
                     }
                 }
             }

@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import java.util.Locale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -157,8 +158,8 @@ fun ProfileScreen(
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate("upload_donasi") },
-                    icon = { Icon(Icons.Outlined.AddCircleOutline, contentDescription = "Upload") },
-                    label = { Text("Upload", fontSize = 11.sp) },
+                    icon = { Icon(Icons.Outlined.AddCircleOutline, contentDescription = "Donate") },
+                    label = { Text("Donate", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
                         unselectedIconColor = OnSurfaceVariant,
                         unselectedTextColor = OnSurfaceVariant
@@ -216,31 +217,6 @@ fun ProfileScreen(
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(OutlineVariant)
-                        .border(2.dp, Primary, CircleShape)
-                ) {
-                    if (!user?.foto_profil.isNullOrEmpty()) {
-                        AsyncImage(
-                            model = user?.foto_profil,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        // Profile placeholder
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = SurfaceLowest,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -340,7 +316,12 @@ fun ProfileScreen(
                             modifier = Modifier.size(28.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("12", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Primary)
+                        Text(
+                            text = viewModel.donationCount.intValue.toString(), 
+                            fontSize = 18.sp, 
+                            fontWeight = FontWeight.Bold, 
+                            color = Primary
+                        )
                         Text("Donations", fontSize = 12.sp, color = OnSurfaceVariant)
                     }
                 }
@@ -360,15 +341,20 @@ fun ProfileScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            Icons.Outlined.StarBorder, 
+                            Icons.Outlined.Star, 
                             contentDescription = "Rating", 
-                            tint = Primary, 
+                            tint = Color(0xFFFFB400), 
                             modifier = Modifier.size(28.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("4.8/5.0", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Primary)
+                        Text(
+                            text = String.format(Locale.US, "%.1f/5.0", user?.rating ?: 0.0),
+                            fontSize = 18.sp, 
+                            fontWeight = FontWeight.Bold, 
+                            color = Primary
+                        )
                         Text("Rating Profil", fontSize = 12.sp, color = OnSurfaceVariant)
-                        Text("Dari 12 penerima", fontSize = 10.sp, color = OutlineVariant)
+                        Text("Berdasarkan donasi", fontSize = 10.sp, color = OutlineVariant)
                     }
                 }
             }

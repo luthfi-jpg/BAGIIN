@@ -2,6 +2,7 @@ package com.example.bagiin.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,11 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 
@@ -31,33 +34,44 @@ private val ColorSecondaryContainer = Color(0xFF64A8FE)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RiwayatDonasiScreen(navController: NavController) {
+fun RiwayatDonasiScreen(
+    navController: NavController,
+    viewModel: com.example.bagiin.viewmodel.RiwayatViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    donasiViewModel: com.example.bagiin.viewmodel.DonasiViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     var selectedTabIndex by remember { mutableIntStateOf(1) } // Default to "Klaim Saya"
     val tabs = listOf("Donasi Saya", "Klaim Saya")
 
-    val klaimList = listOf(
-        KlaimItem(
-            title = "Mainan Edukasi Anak",
-            status = "MENUNGGU",
-            date = "12 Okt 2023",
-            note = "Menunggu persetujuan donatur",
-            noteIcon = Icons.Outlined.Info
-        ),
-        KlaimItem(
-            title = "Buku Paket SMA XII",
-            status = "BERHASIL",
-            date = "05 Okt 2023",
-            note = "Barang telah diterima dengan baik",
-            noteIcon = null
-        ),
-        KlaimItem(
-            title = "Jam Tangan Quartz",
-            status = "MENUNGGU",
-            date = "02 Okt 2023",
-            note = "Menunggu persetujuan donatur",
-            noteIcon = Icons.Outlined.Info
+    val myDonations = viewModel.myDonations.value
+    val myClaims = viewModel.myClaims.value
+    val isLoading = viewModel.isLoading.value
+
+    var showRatingDialog by remember { mutableStateOf(false) }
+    var selectedClaimForRating by remember { mutableStateOf<com.example.bagiin.model.Claim?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchRiwayat()
+    }
+
+    if (showRatingDialog && selectedClaimForRating != null) {
+        RatingDialog(
+            onDismiss = { 
+                showRatingDialog = false 
+                selectedClaimForRating = null
+            },
+            onConfirm = { rating ->
+                viewModel.confirmAndRate(
+                    idKlaim = selectedClaimForRating!!.id_klaim ?: "",
+                    idDonasi = selectedClaimForRating!!.id_donasi ?: "",
+                    rating = rating,
+                    onSuccess = { 
+                        showRatingDialog = false 
+                        selectedClaimForRating = null
+                    }
+                )
+            }
         )
-    )
+    }
 
     Scaffold(
         containerColor = ColorBackground,
@@ -141,26 +155,31 @@ fun RiwayatDonasiScreen(navController: NavController) {
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Outlined.Notifications,
-                        contentDescription = "Notifications",
-                        tint = ColorOnSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
                     Box(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
                             .background(ColorOutlineVariant)
                     ) {
-                        // Dummy avatar image
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = ColorSurface,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+                        val profileViewModel: com.example.bagiin.viewmodel.ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                        val user = profileViewModel.user.value
+                        
+                        if (!user?.foto_profil.isNullOrEmpty()) {
+                            AsyncImage(
+                                model = user?.foto_profil,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            // Dummy avatar placeholder
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = null,
+                                tint = ColorSurface,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
                     }
                 }
             }
@@ -200,19 +219,68 @@ fun RiwayatDonasiScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             // Content
-            if (selectedTabIndex == 1) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(klaimList) { item ->
-                        KlaimCard(item)
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = ColorPrimary)
+                }
+            } else if (selectedTabIndex == 1) {
+                if (myClaims.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Belum ada klaim", color = ColorOnSurfaceVariant)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(myClaims) { item ->
+                            val isPending = item.status?.lowercase() == "pending"
+                            KlaimCard(
+                                item = KlaimItem(
+                                    title = "Klaim Barang #${item.id_donasi?.take(5) ?: "???"}",
+                                    status = item.status?.uppercase() ?: "PENDING",
+                                    date = item.created_at?.split("T")?.first() ?: "-",
+                                    note = item.alasan ?: "Tidak ada alasan",
+                                    noteIcon = Icons.Outlined.Info
+                                ),
+                                modifier = Modifier.clickable(enabled = isPending) {
+                                    selectedClaimForRating = item
+                                    showRatingDialog = true
+                                }
+                            )
+                        }
                     }
                 }
             } else {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Donasi Saya - Kosong", color = ColorOnSurfaceVariant)
+                if (myDonations.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Belum ada donasi", color = ColorOnSurfaceVariant)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(myDonations) { item ->
+                            KlaimCard(
+                                item = KlaimItem(
+                                    title = item.judul ?: "Tanpa Judul",
+                                    status = item.status?.uppercase() ?: "TERSEDIA",
+                                    date = item.created_at?.split("T")?.first() ?: "-",
+                                    note = item.lokasi ?: "Lokasi tidak ada",
+                                    noteIcon = Icons.Outlined.LocationOn
+                                ),
+                                showDeleteButton = item.status?.lowercase() == "tersedia",
+                                onDeleteClick = {
+                                    donasiViewModel.deleteDonasi(item.id_donasi ?: "") {
+                                        viewModel.fetchRiwayat()
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -224,96 +292,199 @@ data class KlaimItem(
     val status: String,
     val date: String,
     val note: String,
-    val noteIcon: androidx.compose.ui.graphics.vector.ImageVector?
+    val noteIcon: ImageVector?
 )
 
 @Composable
-fun KlaimCard(item: KlaimItem) {
+fun KlaimCard(
+    item: KlaimItem,
+    modifier: Modifier = Modifier,
+    showDeleteButton: Boolean = false,
+    onDeleteClick: () -> Unit = {}
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    // ... (dialog logic stays the same)
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Hapus Donasi") },
+            text = { Text("Apakah Anda yakin ingin menghapus donasi ini?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDeleteClick()
+                    showDeleteDialog = false
+                }) {
+                    Text("Hapus", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = ColorSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Subtle or flat since background has color
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            // Image Box Placeholder
-            Box(
+        Column {
+            Row(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(ColorOutlineVariant.copy(alpha = 0.3f))
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Icon(
-                    Icons.Outlined.Image,
-                    contentDescription = null,
-                    tint = ColorOnSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                // Image Box Placeholder
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(ColorOutlineVariant.copy(alpha = 0.3f))
                 ) {
-                    Text(
-                        text = item.title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorOnSurface,
-                        modifier = Modifier.weight(1f)
+                    Icon(
+                        Icons.Outlined.Image,
+                        contentDescription = null,
+                        tint = ColorOnSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.align(Alignment.Center)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    // Status Badge
-                    val isSuccess = item.status == "BERHASIL"
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = if (isSuccess) ColorPrimary else ColorSurfaceVariant,
-                        modifier = Modifier.padding(top = 2.dp)
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            text = item.status,
-                            fontSize = 10.sp,
+                            text = item.title,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSuccess) ColorSurface else ColorOnSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            color = ColorOnSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Status Badge
+                        val isSuccess = item.status == "BERHASIL" || item.status == "DITERIMA" || item.status == "SELESAI"
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (isSuccess) ColorPrimary else ColorSurfaceVariant,
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            Text(
+                                text = item.status,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSuccess) ColorSurface else ColorOnSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Tanggal: ${item.date}",
+                        fontSize = 12.sp,
+                        color = ColorOnSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(verticalAlignment = Alignment.Top) {
+                        if (item.noteIcon != null) {
+                            Icon(
+                                imageVector = item.noteIcon,
+                                contentDescription = null,
+                                tint = ColorOnSurfaceVariant,
+                                modifier = Modifier
+                                    .size(14.dp)
+                                    .padding(top = 2.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
+                        Text(
+                            text = item.note,
+                            fontSize = 13.sp,
+                            color = ColorOnSurfaceVariant,
+                            fontStyle = if (item.noteIcon != null) FontStyle.Italic else FontStyle.Normal
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Klaim pada ${item.date}",
-                    fontSize = 12.sp,
-                    color = ColorOnSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.Top) {
-                    if (item.noteIcon != null) {
+            }
+            if (showDeleteButton) {
+                OutlinedButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Hapus Donasi", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RatingDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (Double) -> Unit
+) {
+    var rating by remember { mutableDoubleStateOf(5.0) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = ColorSurface
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Beri Rating Donatur", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (i in 1..5) {
+                        val isSelected = i <= rating
                         Icon(
-                            imageVector = item.noteIcon,
+                            imageVector = if (isSelected) Icons.Default.Star else Icons.Default.StarBorder,
                             contentDescription = null,
-                            tint = ColorOnSurfaceVariant,
+                            tint = if (isSelected) Color(0xFFFFB400) else ColorOutlineVariant,
                             modifier = Modifier
-                                .size(14.dp)
-                                .padding(top = 2.dp)
+                                .size(40.dp)
+                                .clickable { rating = i.toDouble() }
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                    } else {
-                        // Empty spacer for alignment if there is no icon
-                        Spacer(modifier = Modifier.width(20.dp))
                     }
-                    Text(
-                        text = item.note,
-                        fontSize = 13.sp,
-                        color = ColorOnSurfaceVariant,
-                        fontStyle = if (item.noteIcon != null) FontStyle.Italic else FontStyle.Normal
-                    )
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Batal")
+                    }
+                    Button(
+                        onClick = { onConfirm(rating) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary)
+                    ) {
+                        Text("Simpan")
+                    }
                 }
             }
         }

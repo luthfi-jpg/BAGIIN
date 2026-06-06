@@ -61,17 +61,14 @@ class ProfileRepository {
         }
     }
 
-    suspend fun uploadAvatar(byteArray: ByteArray, fileName: String): Result<String> {
+    suspend fun uploadAvatar(userId: String, byteArray: ByteArray, fileName: String): Result<String> {
         return try {
-            val bucket = client.storage.from("avatars")
-            val path = "public/$fileName"
-            
+            val bucket = client.storage.from("avatar")
+            val path = "$userId/$fileName"
             bucket.upload(path, byteArray) {
                 upsert = true
             }
-            
-            val url = bucket.publicUrl(path)
-            Result.success(url)
+            Result.success(bucket.publicUrl(path))
         } catch (e: Exception) {
             Result.failure(e)
         }

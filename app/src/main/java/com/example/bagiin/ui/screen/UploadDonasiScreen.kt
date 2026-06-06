@@ -1,6 +1,7 @@
 package com.example.bagiin.ui.screen
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,12 +31,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.bagiin.viewmodel.DonasiViewModel
 
 val ColorPrimary = Color(0xFF2563EB)
 val ColorBackground = Color(0xFFF8F9FF)
@@ -46,7 +50,10 @@ val ColorOutlineVariant = Color(0xFFC3C6D7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadDonasiScreen(navController: NavController) {
+fun UploadDonasiScreen(
+    navController: NavController,
+    viewModel: DonasiViewModel = viewModel()
+) {
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var namaBarang by remember { mutableStateOf("") }
     var kategori by remember { mutableStateOf("") }
@@ -54,6 +61,16 @@ fun UploadDonasiScreen(navController: NavController) {
     var kondisi by remember { mutableStateOf("") }
     var deskripsi by remember { mutableStateOf("") }
     var lokasi by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val isLoading = viewModel.isLoading.value
+    val errorMessage = viewModel.errorMessage.value
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
 
     val kondisiOptions = listOf("Baru", "Seperti Baru", "Bagus", "Layak Pakai")
     val kategoriOptions = listOf("Pakaian", "Elektronik", "Buku", "Mainan", "Lainnya")
@@ -88,16 +105,43 @@ fun UploadDonasiScreen(navController: NavController) {
                     .padding(16.dp)
             ) {
                 Button(
-                    onClick = { /* Submit Action */ },
+                    onClick = {
+                        if (namaBarang.isBlank() || kategori.isBlank() || kondisi.isBlank() || lokasi.isBlank()) {
+                            Toast.makeText(context, "Harap lengkapi semua data", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        
+                        val imageByteArrays = selectedImageUris.mapNotNull { uri ->
+                            context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                        }
+
+                        viewModel.uploadDonasi(
+                            judul = namaBarang,
+                            deskripsi = deskripsi,
+                            kategori = kategori,
+                            kondisi = kondisi,
+                            lokasi = lokasi,
+                            imageByteArrays = imageByteArrays,
+                            onSuccess = {
+                                Toast.makeText(context, "Donasi berhasil dikirim!", Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
+                            }
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary),
+                    enabled = !isLoading
                 ) {
-                    Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Submit Donasi", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = ColorSurface)
+                    } else {
+                        Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Submit Donasi", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }

@@ -30,7 +30,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.bagiin.R
 import com.example.bagiin.data.SupabaseInstance
-import com.example.bagiin.model.DonationItem
+import com.example.bagiin.model.Donasi
+import com.example.bagiin.viewmodel.DonasiViewModel
 import com.example.bagiin.viewmodel.ProfileViewModel
 import io.github.jan.supabase.auth.auth
 import java.net.URLEncoder
@@ -39,25 +40,32 @@ import java.nio.charset.StandardCharsets
 // Luminous Giving Colors
 private val Primary = Color(0xFF004AC6)
 private val PrimaryContainer = Color(0xFF2563EB)
-private val OnPrimary = Color(0xFFFFFFFF)
+private val LGOnPrimary = Color(0xFFFFFFFF)
 private val Background = Color(0xFFF8F9FF)
-private val SurfaceLowest = Color(0xFFFFFFFF)
-private val SurfaceContainer = Color(0xFFE5EEFF)
+private val LGSurfaceLowest = Color(0xFFFFFFFF)
+private val LGSurfaceContainer = Color(0xFFE5EEFF)
 private val OnBackground = Color(0xFF0B1C30)
-private val OnSurfaceVariant = Color(0xFF434655)
-private val OutlineVariant = Color(0xFFC3C6D7)
+private val LGOnSurfaceVariant = Color(0xFF434655)
+private val LGOutlineVariant = Color(0xFFC3C6D7)
 private val SecondaryContainer = Color(0xFF64A8FE)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     navController: NavController,
-    profileViewModel: ProfileViewModel = viewModel()
+    profileViewModel: ProfileViewModel = viewModel(),
+    donasiViewModel: DonasiViewModel = viewModel()
 ) {
     val user = profileViewModel.user.value
     val email = SupabaseInstance.client.auth.currentUserOrNull()?.email ?: ""
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Semua") }
+
+    // Refresh data when screen is shown
+    LaunchedEffect(Unit) {
+        donasiViewModel.fetchDonasi()
+    }
+
     val categories = listOf(
         Pair("Semua", Icons.Default.AllInclusive),
         Pair("Pakaian", Icons.Default.Checkroom),
@@ -65,25 +73,19 @@ fun DashboardScreen(
         Pair("Alat Sekolah", Icons.Default.School)
     )
 
-    val allDonations = listOf(
-        DonationItem("Paket Pakaian Bayi", "Jakarta Selatan", "Sangat Baik", "Pakaian"),
-        DonationItem("Kumpulan Novel Remaja", "Bandung", "Sangat Baik", "Buku"),
-        DonationItem("Mainan Kayu Edukasi", "Yogyakarta", "Baik", "Alat Sekolah"),
-        DonationItem("Seragam SD Kelas 1", "Jakarta Timur", "Sangat Baik", "Pakaian"),
-        DonationItem("Buku Pelajaran Matematika", "Surabaya", "Baik", "Buku"),
-        DonationItem("Tas Sekolah Karakter", "Semarang", "Sangat Baik", "Alat Sekolah")
-    )
+    val allDonations = donasiViewModel.donationList.value
+    val isLoadingDonasi = donasiViewModel.isLoading.value
 
     val filteredDonations = allDonations.filter { item ->
-        (selectedCategory == "Semua" || item.category == selectedCategory) &&
-        (searchQuery.isEmpty() || item.title.contains(searchQuery, ignoreCase = true))
+        (selectedCategory == "Semua" || item.kategori == selectedCategory) &&
+        (searchQuery.isEmpty() || item.judul?.contains(searchQuery, ignoreCase = true) == true)
     }
 
     Scaffold(
         containerColor = Background,
         bottomBar = {
             NavigationBar(
-                containerColor = SurfaceLowest,
+                containerColor = LGSurfaceLowest,
                 tonalElevation = 8.dp
             ) {
                 NavigationBarItem(
@@ -92,21 +94,21 @@ fun DashboardScreen(
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Primary,
-                        selectedTextColor = Primary,
+                        selectedIconColor = LGPrimary,
+                        selectedTextColor = LGPrimary,
                         indicatorColor = SecondaryContainer.copy(alpha = 0.3f),
-                        unselectedIconColor = OnSurfaceVariant,
-                        unselectedTextColor = OnSurfaceVariant
+                        unselectedIconColor = LGOnSurfaceVariant,
+                        unselectedTextColor = LGOnSurfaceVariant
                     )
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate("upload_donasi") },
-                    icon = { Icon(Icons.Outlined.AddCircleOutline, contentDescription = "Upload") },
-                    label = { Text("Upload", fontSize = 11.sp) },
+                    icon = { Icon(Icons.Outlined.AddCircleOutline, contentDescription = "Donate") },
+                    label = { Text("Donate", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = OnSurfaceVariant,
-                        unselectedTextColor = OnSurfaceVariant
+                        unselectedIconColor = LGOnSurfaceVariant,
+                        unselectedTextColor = LGOnSurfaceVariant
                     )
                 )
                 NavigationBarItem(
@@ -115,8 +117,8 @@ fun DashboardScreen(
                     icon = { Icon(Icons.Outlined.History, contentDescription = "History") },
                     label = { Text("History", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = OnSurfaceVariant,
-                        unselectedTextColor = OnSurfaceVariant
+                        unselectedIconColor = LGOnSurfaceVariant,
+                        unselectedTextColor = LGOnSurfaceVariant
                     )
                 )
                 NavigationBarItem(
@@ -125,8 +127,8 @@ fun DashboardScreen(
                     icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
                     label = { Text("Profile", fontSize = 11.sp) },
                     colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = OnSurfaceVariant,
-                        unselectedTextColor = OnSurfaceVariant
+                        unselectedIconColor = LGOnSurfaceVariant,
+                        unselectedTextColor = LGOnSurfaceVariant
                     )
                 )
             }
@@ -163,7 +165,7 @@ fun DashboardScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(OutlineVariant)
+                        .background(LGOutlineVariant)
                 ) {
                         if (!user?.foto_profil.isNullOrEmpty()) {
                             AsyncImage(
@@ -177,7 +179,7 @@ fun DashboardScreen(
                             Icon(
                                 Icons.Default.Person,
                                 contentDescription = null,
-                                tint = SurfaceLowest,
+                                tint = LGSurfaceLowest,
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         }
@@ -202,9 +204,9 @@ fun DashboardScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Cari barang atau kebutuhan...", color = OnSurfaceVariant, fontSize = 14.sp) },
+                    placeholder = { Text("Cari barang atau kebutuhan...", color = LGOnSurfaceVariant, fontSize = 14.sp) },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = OnSurfaceVariant)
+                        Icon(Icons.Default.Search, contentDescription = null, tint = LGOnSurfaceVariant)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -212,11 +214,11 @@ fun DashboardScreen(
                     singleLine = true,
                     shape = RoundedCornerShape(9999.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = OutlineVariant,
-                        focusedBorderColor = Primary,
-                        cursorColor = Primary,
-                        unfocusedContainerColor = SurfaceLowest,
-                        focusedContainerColor = SurfaceLowest
+                        unfocusedBorderColor = LGOutlineVariant,
+                        focusedBorderColor = LGPrimary,
+                        cursorColor = LGPrimary,
+                        unfocusedContainerColor = LGSurfaceLowest,
+                        focusedContainerColor = LGSurfaceLowest
                     )
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -234,8 +236,8 @@ fun DashboardScreen(
                         
                         Surface(
                             shape = RoundedCornerShape(9999.dp),
-                            color = if (isSelected) Primary else SurfaceLowest,
-                            border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, OutlineVariant) else null,
+                            color = if (isSelected) LGPrimary else LGSurfaceLowest,
+                            border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, LGOutlineVariant) else null,
                             onClick = { selectedCategory = category.first }
                         ) {
                             Row(
@@ -245,7 +247,7 @@ fun DashboardScreen(
                                 Icon(
                                     imageVector = category.second,
                                     contentDescription = null,
-                                    tint = if (isSelected) OnPrimary else OnSurfaceVariant,
+                                    tint = if (isSelected) LGOnPrimary else LGOnSurfaceVariant,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -253,7 +255,7 @@ fun DashboardScreen(
                                     text = category.first,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = if (isSelected) OnPrimary else OnSurfaceVariant
+                                    color = if (isSelected) LGOnPrimary else LGOnSurfaceVariant
                                 )
                             }
                         }
@@ -288,7 +290,7 @@ fun DashboardScreen(
                             Text(
                                 text = "Berbagi Kebaikan",
                                 fontSize = 12.sp,
-                                color = OnPrimary,
+                                color = LGOnPrimary,
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(4.dp))
@@ -296,19 +298,19 @@ fun DashboardScreen(
                                 text = "Donasi Barang yang\ntidak digunakan",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = OnPrimary,
+                                color = LGOnPrimary,
                                 lineHeight = 24.sp
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Surface(
                                 shape = RoundedCornerShape(9999.dp),
-                                color = SurfaceLowest,
+                                color = LGSurfaceLowest,
                                 onClick = { navController.navigate("upload_donasi") }
                             ) {
                                 Text(
                                     text = "Donasi",
                                     fontSize = 12.sp,
-                                    color = Primary,
+                                    color = LGPrimary,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                 )
@@ -335,27 +337,14 @@ fun DashboardScreen(
                         color = OnBackground
                     )
                     TextButton(onClick = { navController.navigate("daftar_barang") }) {
-                        Text("Lihat Semua", color = Primary, fontSize = 14.sp)
+                        Text("Lihat Semua", color = LGPrimary, fontSize = 14.sp)
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
             // Donation Items
-            items(filteredDonations) { item ->
-                DonationItemCard(
-                    title = item.title,
-                    location = item.location,
-                    condition = item.condition,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    onClick = {
-                        val encodedTitle = URLEncoder.encode(item.title, StandardCharsets.UTF_8.toString())
-                        navController.navigate("detail_barang/$encodedTitle")
-                    }
-                )
-            }
-            
-            if (filteredDonations.isEmpty()) {
+            if (isLoadingDonasi) {
                 item {
                     Box(
                         modifier = Modifier
@@ -363,11 +352,39 @@ fun DashboardScreen(
                             .padding(top = 40.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Barang tidak ditemukan",
-                            color = OnSurfaceVariant,
-                            fontSize = 14.sp
-                        )
+                        CircularProgressIndicator(color = LGPrimary)
+                    }
+                }
+            } else {
+                items(filteredDonations) { item ->
+                    DonationItemCard(
+                        title = item.judul ?: "",
+                        location = item.lokasi ?: "",
+                        condition = item.kondisi ?: "",
+                        fotoUrl = item.foto_url?.firstOrNull(),
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        onClick = {
+                            val encodedId = URLEncoder.encode(item.id_donasi ?: "", StandardCharsets.UTF_8.toString())
+                            val encodedTitle = URLEncoder.encode(item.judul ?: "", StandardCharsets.UTF_8.toString())
+                            navController.navigate("klaim_barang/$encodedId/$encodedTitle")
+                        }
+                    )
+                }
+            
+                if (filteredDonations.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 40.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Barang tidak ditemukan",
+                                color = LGOnSurfaceVariant,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }
@@ -375,18 +392,21 @@ fun DashboardScreen(
     }
 }
 
+private val LGPrimary = Color(0xFF004AC6)
+
 @Composable
 fun DonationItemCard(
     modifier: Modifier = Modifier,
     title: String,
     location: String,
     condition: String,
+    fotoUrl: String? = null,
     onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceLowest),
+        colors = CardDefaults.cardColors(containerColor = LGSurfaceLowest),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = onClick
     ) {
@@ -395,21 +415,30 @@ fun DonationItemCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
-                    .background(SurfaceContainer)
+                    .background(LGSurfaceContainer)
             ) {
-                // Image Placeholder
-                Icon(
-                    Icons.Default.Image,
-                    contentDescription = null,
-                    tint = OutlineVariant,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.Center)
-                )
+                if (!fotoUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = fotoUrl,
+                        contentDescription = title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // Image Placeholder
+                    Icon(
+                        Icons.Default.Image,
+                        contentDescription = null,
+                        tint = LGOutlineVariant,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.Center)
+                    )
+                }
                 
                 Surface(
                     shape = RoundedCornerShape(9999.dp),
-                    color = SurfaceLowest,
+                    color = LGSurfaceLowest,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(12.dp)
@@ -417,7 +446,7 @@ fun DonationItemCard(
                     Text(
                         text = condition,
                         fontSize = 11.sp,
-                        color = Primary,
+                        color = LGPrimary,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
@@ -441,7 +470,7 @@ fun DonationItemCard(
                     Icon(
                         Icons.Outlined.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = OnSurfaceVariant,
+                        tint = LGOnSurfaceVariant,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -452,14 +481,14 @@ fun DonationItemCard(
                     Icon(
                         Icons.Outlined.LocationOn,
                         contentDescription = "Location",
-                        tint = OnSurfaceVariant,
+                        tint = LGOnSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = location,
                         fontSize = 14.sp,
-                        color = OnSurfaceVariant
+                        color = LGOnSurfaceVariant
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -473,9 +502,9 @@ fun DonationItemCard(
                             .fillMaxWidth()
                             .height(40.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                        colors = ButtonDefaults.buttonColors(containerColor = LGPrimary)
                     ) {
-                        Text("Detail", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = OnPrimary)
+                        Text("Detail", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = LGOnPrimary)
                     }
                 }
             }
