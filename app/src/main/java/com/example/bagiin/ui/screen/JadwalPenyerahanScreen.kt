@@ -9,7 +9,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,52 +25,59 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
-import com.example.bagiin.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bagiin.viewmodel.JadwalPenyerahanViewModel
+
+// Luminous Giving Colors
+private val LGPrimary = Color(0xFF004AC6)
+private val LGPrimaryContainer = Color(0xFF2563EB)
+private val LGOnPrimary = Color(0xFFFFFFFF)
+private val LGBackground = Color(0xFFF8F9FF)
+private val LGSurfaceLowest = Color(0xFFFFFFFF)
+private val LGSurfaceContainer = Color(0xFFE5EEFF)
+private val LGSurfaceContainerLow = Color(0xFFEFF4FF)
+private val LGOnBackground = Color(0xFF0B1C30)
+private val LGOnSurfaceVariant = Color(0xFF434655)
+private val LGOutline = Color(0xFF737686)
+private val LGOutlineVariant = Color(0xFFC3C6D7)
+private val LGSuccessGreen = Color(0xFF16A34A)
+private val LGSuccessGreenBg = Color(0xFFDCFCE7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
-    // 1. Text Input States
+fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String, viewModel: JadwalPenyerahanViewModel = viewModel()) {
+    // Text Input States
+    val additionalInstructions = viewModel.additionalInstructions
+    val selectedDateText = viewModel.selectedDateText
+    val selectedTimeText = viewModel.selectedTimeText
+    val showSuccessDialog = viewModel.showSuccessDialog
+
     var meetingLocation by remember { mutableStateOf("") }
-    var additionalInstructions by remember { mutableStateOf("") }
 
-    // 2. Dialog State
-    var showSuccessDialog by remember { mutableStateOf(false) }
-
-    // Assuming you have these defined in your theme.
-    val localGrey = Color(0xFFF5F6F8)
-    val localBorderGrey = Color(0xFFEEEEEE)
-
-    // 3. State for displaying the selected Date/Time in the UI
-    var selectedDateText by remember { mutableStateOf("11/15/2023") }
-    var selectedTimeText by remember { mutableStateOf("2:00 PM") }
-
-    // 4. State for controlling date/time dialog visibility
+    // State for controlling date/time dialog visibility
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    // 5. States for the Pickers themselves
+    // States for the Pickers themselves
     val datePickerState = rememberDatePickerState()
     val timePickerState = rememberTimePickerState(
-        initialHour = 14, // 2 PM
+        initialHour = 14,
         initialMinute = 0,
         is24Hour = false
     )
 
-    // --- FULL SCREEN SUCCESS DIALOG ---
+    // ==================== SUCCESS DIALOG ====================
     if (showSuccessDialog) {
         Dialog(
-            onDismissRequest = { /* Prevent dismiss to force user to click a button */ },
-            properties = DialogProperties(
-                usePlatformDefaultWidth = false // This allows the dialog to be full screen
-            )
+            onDismissRequest = { },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
-                color = Color.White
+                color = LGSurfaceLowest
             ) {
                 Column(
                     modifier = Modifier
@@ -82,13 +91,13 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                         modifier = Modifier
                             .size(100.dp)
                             .clip(CircleShape)
-                            .background(BagiinGreen.copy(alpha = 0.15f)),
+                            .background(LGSuccessGreenBg),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = "Success",
-                            tint = BagiinGreen,
+                            tint = LGSuccessGreen,
                             modifier = Modifier.size(52.dp)
                         )
                     }
@@ -96,20 +105,21 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Schedule Successfully\nCreated!",
+                        text = "Jadwal Berhasil\nDibuat!",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = BagiinDarkText,
+                        color = LGOnBackground,
                         textAlign = TextAlign.Center,
-                        lineHeight = 32.sp
+                        lineHeight = 32.sp,
+                        letterSpacing = (-0.01).sp
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "The item handover schedule has been\nconfirmed. Please ensure you arrive on\ntime at the agreed location.",
+                        text = "Jadwal penyerahan barang telah\ndikonfirmasi. Pastikan Anda datang tepat\nwaktu di lokasi yang disepakati.",
                         fontSize = 15.sp,
-                        color = BagiinGreyText,
+                        color = LGOnSurfaceVariant,
                         textAlign = TextAlign.Center,
                         lineHeight = 22.sp
                     )
@@ -119,9 +129,8 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                     // View History Button
                     Button(
                         onClick = {
-                            showSuccessDialog = false
+                            viewModel.dismissDialog()
                             navController.navigate("riwayat_donasi") {
-                                // Pop everything up to the start destination to prevent going back to the schedule screen
                                 popUpTo(navController.graph.startDestinationId) {
                                     inclusive = false
                                 }
@@ -130,18 +139,23 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
+                            .height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = BagiinGreen)
+                        colors = ButtonDefaults.buttonColors(containerColor = LGPrimaryContainer)
                     ) {
                         Icon(
-                            Icons.Default.List, // Standard receipt/list icon replacement
+                            Icons.Outlined.History,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = LGOnPrimary,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("View History", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Lihat Riwayat",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = LGOnPrimary
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -149,7 +163,7 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                     // Close Button
                     TextButton(
                         onClick = {
-                            showSuccessDialog = false
+                            viewModel.dismissDialog()
                             navController.navigate("dashboard") {
                                 popUpTo(navController.graph.startDestinationId) {
                                     inclusive = false
@@ -159,68 +173,222 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Close", color = BagiinGreen, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Tutup",
+                            color = LGPrimaryContainer,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
-    ) {
-        // --- TOP BAR ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp, start = 8.dp, end = 16.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = BagiinDarkText
-                )
+    // ==================== DATE PICKER DIALOG ====================
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.dismissDialog()
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+                            viewModel.updateDate(
+                                formatter.format(Date(millis))
+                            )
+                        }
+                    }
+                ) {
+                    Text("OK", color = LGPrimaryContainer)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Batal", color = LGOnBackground)
+                }
             }
-            Text(
-                text = "Schedule Handover",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = BagiinDarkText
-            )
+        ) {
+            DatePicker(state = datePickerState)
         }
+    }
 
-        // --- SCROLLABLE CONTENT ---
+    // ==================== TIME PICKER DIALOG ====================
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showTimePicker = false
+                        val hour = timePickerState.hour
+                        val minute = timePickerState.minute
+                        val isAm = hour < 12
+                        val amPm = if (isAm) "AM" else "PM"
+                        val formattedHour = if (hour % 12 == 0) 12 else hour % 12
+                        viewModel.updateTime(
+                            String.format(
+                                Locale.getDefault(),
+                                "%d:%02d %s",
+                                formattedHour,
+                                minute,
+                                amPm
+                            )
+                        )
+                    }
+                ) {
+                    Text("OK", color = LGPrimaryContainer)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Batal", color = LGOnBackground)
+                }
+            },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TimePicker(state = timePickerState)
+                }
+            }
+        )
+    }
+
+    // ==================== MAIN SCREEN ====================
+    Scaffold(
+        containerColor = LGBackground,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Jadwal Penyerahan",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = LGOnBackground
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = LGOnBackground
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* notification */ }) {
+                        Icon(
+                            Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = LGOnBackground
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = LGSurfaceLowest
+                )
+            )
+        },
+        bottomBar = {
+            Surface(
+                color = LGSurfaceLowest,
+                shadowElevation = 12.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Cancel button
+                    OutlinedButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, LGOutlineVariant)
+                    ) {
+                        Text(
+                            "Batal",
+                            color = LGOnBackground,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    // Confirm button
+                    Button(
+                        onClick = { viewModel.confirmSchedule() },
+                        modifier = Modifier
+                            .weight(1.5f)
+                            .height(52.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = LGPrimaryContainer),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 2.dp,
+                            pressedElevation = 0.dp
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = LGOnPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Konfirmasi\nJadwal",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = LGOnPrimary,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+            }
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // 1. Item Info Card
+            // ==================== ITEM INFO CARD ====================
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, localBorderGrey)
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = LGSurfaceLowest),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Item icon
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF6B8E78)),
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(LGSurfaceContainer),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Inventory, contentDescription = null, tint = Color.White)
+                        Icon(
+                            Icons.Default.Inventory,
+                            contentDescription = null,
+                            tint = LGPrimaryContainer,
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -230,7 +398,7 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                             text = "SCHEDULING FOR",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = BagiinGreyText,
+                            color = LGOnSurfaceVariant,
                             letterSpacing = 1.sp
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -238,22 +406,22 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                             text = itemTitle,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = BagiinDarkText,
+                            color = LGOnBackground,
                             lineHeight = 20.sp
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                Icons.Default.Person,
+                                Icons.Outlined.Person,
                                 contentDescription = null,
-                                tint = BagiinGreen,
+                                tint = LGSuccessGreen,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Donated by Alex Chen",
                                 fontSize = 12.sp,
-                                color = BagiinGreen,
+                                color = LGSuccessGreen,
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -261,242 +429,121 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // 2. When Section
+            // ==================== WHEN SECTION ====================
             Text(
-                text = "When would you like to meet?",
-                fontSize = 14.sp,
+                text = "Kapan Anda ingin bertemu?",
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = BagiinDarkText
+                color = LGOnBackground
             )
+
             Spacer(modifier = Modifier.height(12.dp))
 
-            // --- Date Picker Dialog ---
-            if (showDatePicker) {
-                DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showDatePicker = false
-                                datePickerState.selectedDateMillis?.let { millis ->
-                                    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-                                    selectedDateText = formatter.format(Date(millis))
-                                }
-                            }
-                        ) {
-                            Text("OK", color = BagiinGreen)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) {
-                            Text("Cancel", color = BagiinDarkText)
-                        }
-                    }
-                ) {
-                    DatePicker(state = datePickerState)
-                }
-            }
-
-            // --- Time Picker Dialog ---
-            if (showTimePicker) {
-                AlertDialog(
-                    onDismissRequest = { showTimePicker = false },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                showTimePicker = false
-                                val hour = timePickerState.hour
-                                val minute = timePickerState.minute
-                                val isAm = hour < 12
-                                val amPm = if (isAm) "AM" else "PM"
-                                val formattedHour = if (hour % 12 == 0) 12 else hour % 12
-                                selectedTimeText = String.format(Locale.getDefault(), "%d:%02d %s", formattedHour, minute, amPm)
-                            }
-                        ) {
-                            Text("OK", color = BagiinGreen)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showTimePicker = false }) {
-                            Text("Cancel", color = BagiinDarkText)
-                        }
-                    },
-                    text = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            TimePicker(state = timePickerState)
-                        }
-                    }
-                )
-            }
-
-            // Date Picker UI
+            // Date Picker field
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { showDatePicker = true },
-                shape = RoundedCornerShape(8.dp),
-                color = localGrey
+                shape = RoundedCornerShape(12.dp),
+                color = LGSurfaceContainerLow,
+                border = BorderStroke(1.dp, LGOutlineVariant.copy(alpha = 0.5f))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.DateRange, contentDescription = null, tint = BagiinDarkText)
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = null,
+                        tint = LGOnSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(text = selectedDateText, fontSize = 15.sp, color = BagiinDarkText)
+                    Text(
+                        text = selectedDateText,
+                        fontSize = 14.sp,
+                        color = LGOnBackground,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Time Picker UI
+            // Time Picker field
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { showTimePicker = true },
-                shape = RoundedCornerShape(8.dp),
-                color = localGrey
+                shape = RoundedCornerShape(12.dp),
+                color = LGSurfaceContainerLow,
+                border = BorderStroke(1.dp, LGOutlineVariant.copy(alpha = 0.5f))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = selectedTimeText, fontSize = 15.sp, color = BagiinDarkText)
+                    Text(
+                        text = selectedTimeText,
+                        fontSize = 14.sp,
+                        color = LGOnBackground,
+                        fontWeight = FontWeight.Medium
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = BagiinDarkText)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // 3. Where Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Where will you meet?",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BagiinDarkText
-                )
-                Row(
-                    modifier = Modifier.clickable { /* TODO: Change Location Map logic */ },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = null, tint = BagiinGreen, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Change", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = BagiinGreen)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Location Input TextField
-            TextField(
-                value = meetingLocation,
-                onValueChange = { meetingLocation = it },
-                placeholder = {
-                    Text(
-                        "e.g., Jl. Mawar 123",
-                        color = BagiinGreyText,
-                        fontSize = 14.sp
+                    Icon(
+                        Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = LGOnSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
                     )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = localGrey,
-                    unfocusedContainerColor = localGrey,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
-            )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // 4. Additional Instructions Section
+            // ==================== ADDITIONAL INSTRUCTIONS ====================
             Text(
-                text = "Additional Instructions (Optional)",
-                fontSize = 14.sp,
+                text = "Instruksi Tambahan (Opsional)",
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = BagiinDarkText
+                color = LGOnBackground
             )
+
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Instructions Input TextField
-            TextField(
+            OutlinedTextField(
                 value = additionalInstructions,
-                onValueChange = { additionalInstructions = it },
+                onValueChange = {
+                    viewModel.updateInstructions(it)
+                },
                 placeholder = {
                     Text(
-                        "e.g., 'I'll be wearing a red jacket' or 'Text me when you arrive'",
-                        color = BagiinGreyText,
-                        fontSize = 14.sp
+                        "e.g., 'Saya akan memakai jaket merah' atau 'Hubungi saya saat tiba'",
+                        color = LGOutline,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp
                     )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp),
+                    .heightIn(min = 120.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = localGrey,
-                    unfocusedContainerColor = localGrey,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = LGOutlineVariant.copy(alpha = 0.5f),
+                    focusedBorderColor = LGPrimaryContainer,
+                    cursorColor = LGPrimaryContainer,
+                    unfocusedContainerColor = LGSurfaceContainerLow,
+                    focusedContainerColor = LGSurfaceLowest
+                ),
+                textStyle = LocalTextStyle.current.copy(
+                    fontSize = 14.sp,
+                    color = LGOnBackground
                 )
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // --- BOTTOM ACTION BUTTONS ---
-        Surface(
-            color = Color.White,
-            shadowElevation = 8.dp,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, Color.Gray)
-                ) {
-                    Text("Cancel", color = BagiinDarkText, fontSize = 15.sp)
-                }
-
-                Button(
-                    onClick = {
-                        // Open the Success Dialog
-                        showSuccessDialog = true
-                    },
-                    modifier = Modifier
-                        .weight(1.5f)
-                        .height(52.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = BagiinGreen)
-                ) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Confirm Schedule", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
-            }
         }
     }
 }
