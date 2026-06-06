@@ -28,6 +28,8 @@ import androidx.navigation.NavController
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bagiin.viewmodel.JadwalPenyerahanViewModel
 
 // Luminous Giving Colors
 private val LGPrimary = Color(0xFF004AC6)
@@ -46,17 +48,14 @@ private val LGSuccessGreenBg = Color(0xFFDCFCE7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
+fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String, viewModel: JadwalPenyerahanViewModel = viewModel()) {
     // Text Input States
+    val additionalInstructions = viewModel.additionalInstructions
+    val selectedDateText = viewModel.selectedDateText
+    val selectedTimeText = viewModel.selectedTimeText
+    val showSuccessDialog = viewModel.showSuccessDialog
+
     var meetingLocation by remember { mutableStateOf("") }
-    var additionalInstructions by remember { mutableStateOf("") }
-
-    // Dialog State
-    var showSuccessDialog by remember { mutableStateOf(false) }
-
-    // State for displaying the selected Date/Time
-    var selectedDateText by remember { mutableStateOf("11/15/2023") }
-    var selectedTimeText by remember { mutableStateOf("2:00 PM") }
 
     // State for controlling date/time dialog visibility
     var showDatePicker by remember { mutableStateOf(false) }
@@ -130,7 +129,7 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                     // View History Button
                     Button(
                         onClick = {
-                            showSuccessDialog = false
+                            viewModel.dismissDialog()
                             navController.navigate("riwayat_donasi") {
                                 popUpTo(navController.graph.startDestinationId) {
                                     inclusive = false
@@ -164,7 +163,7 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                     // Close Button
                     TextButton(
                         onClick = {
-                            showSuccessDialog = false
+                            viewModel.dismissDialog()
                             navController.navigate("dashboard") {
                                 popUpTo(navController.graph.startDestinationId) {
                                     inclusive = false
@@ -193,10 +192,12 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDatePicker = false
+                        viewModel.dismissDialog()
                         datePickerState.selectedDateMillis?.let { millis ->
                             val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-                            selectedDateText = formatter.format(Date(millis))
+                            viewModel.updateDate(
+                                formatter.format(Date(millis))
+                            )
                         }
                     }
                 ) {
@@ -226,12 +227,14 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
                         val isAm = hour < 12
                         val amPm = if (isAm) "AM" else "PM"
                         val formattedHour = if (hour % 12 == 0) 12 else hour % 12
-                        selectedTimeText = String.format(
-                            Locale.getDefault(),
-                            "%d:%02d %s",
-                            formattedHour,
-                            minute,
-                            amPm
+                        viewModel.updateTime(
+                            String.format(
+                                Locale.getDefault(),
+                                "%d:%02d %s",
+                                formattedHour,
+                                minute,
+                                amPm
+                            )
                         )
                     }
                 ) {
@@ -321,7 +324,7 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
 
                     // Confirm button
                     Button(
-                        onClick = { showSuccessDialog = true },
+                        onClick = { viewModel.confirmSchedule() },
                         modifier = Modifier
                             .weight(1.5f)
                             .height(52.dp),
@@ -512,7 +515,9 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String) {
 
             OutlinedTextField(
                 value = additionalInstructions,
-                onValueChange = { additionalInstructions = it },
+                onValueChange = {
+                    viewModel.updateInstructions(it)
+                },
                 placeholder = {
                     Text(
                         "e.g., 'Saya akan memakai jaket merah' atau 'Hubungi saya saat tiba'",
