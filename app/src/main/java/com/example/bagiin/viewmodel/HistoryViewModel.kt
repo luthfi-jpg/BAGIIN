@@ -6,55 +6,81 @@ import com.example.bagiin.model.HistoryItem
 import com.example.bagiin.repository.HistoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+data class HistoryUiState(
+    val historyList: List<HistoryItem> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val successMessage: String? = null
+)
 
 class HistoryViewModel : ViewModel() {
 
     private val repository = HistoryRepository()
 
-    private val _history =
-        MutableStateFlow<List<HistoryItem>>(emptyList())
-
-    val history: StateFlow<List<HistoryItem>>
-            = _history
+    private val _uiState = MutableStateFlow(HistoryUiState())
+    val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
     init {
         loadHistory()
     }
 
     fun loadHistory() {
-
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorMessage = null,
+                successMessage = null
+            )
 
             try {
+                val data = repository.getHistoryByCurrentUser()
 
-                _history.value =
-                    repository.getHistory()
-
+                _uiState.value = _uiState.value.copy(
+                    historyList = data,
+                    isLoading = false
+                )
             } catch (e: Exception) {
-                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Gagal mengambil riwayat"
+                )
             }
         }
     }
 
-    fun addHistory(
-        idUser: String,
-        aktivitas: String
-    ) {
+    fun addHistory(aktivitas: String) {
+        if (aktivitas.isBlank()) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Aktivitas tidak boleh kosong"
+            )
+            return
+        }
 
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorMessage = null,
+                successMessage = null
+            )
 
             try {
+                repository.insertHistory(aktivitas.trim())
 
-                repository.insertHistory(
-                    idUser,
-                    aktivitas
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    successMessage = "Riwayat berhasil ditambahkan"
                 )
 
                 loadHistory()
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Gagal menambahkan riwayat"
+                )
             }
         }
     }

@@ -1,321 +1,244 @@
 package com.example.bagiin.ui.screen
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+import com.example.bagiin.model.HistoryItem
+import com.example.bagiin.viewmodel.HistoryViewModel
 
-// Colors from Luminous Giving
-private val ColorSurfaceVariant = Color(0xFFE5EEFF)
-private val ColorSecondaryContainer = Color(0xFF64A8FE)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RiwayatDonasiScreen(navController: NavController) {
-    var selectedTabIndex by remember { mutableIntStateOf(1) } // Default to "Klaim Saya"
-    val tabs = listOf("Donasi Saya", "Klaim Saya")
-
-    val klaimList = listOf(
-        KlaimItem(
-            title = "Mainan Edukasi Anak",
-            status = "MENUNGGU",
-            date = "12 Okt 2023",
-            note = "Menunggu persetujuan donatur",
-            noteIcon = Icons.Outlined.Info
-        ),
-        KlaimItem(
-            title = "Buku Paket SMA XII",
-            status = "BERHASIL",
-            date = "05 Okt 2023",
-            note = "Barang telah diterima dengan baik",
-            noteIcon = null
-        ),
-        KlaimItem(
-            title = "Jam Tangan Quartz",
-            status = "MENUNGGU",
-            date = "02 Okt 2023",
-            note = "Menunggu persetujuan donatur",
-            noteIcon = Icons.Outlined.Info
-        )
-    )
+fun RiwayatDonasiScreen(
+    navController: NavController,
+    viewModel: HistoryViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    var aktivitasInput by rememberSaveable { mutableStateOf("") }
+    val listState = rememberLazyListState()
 
     Scaffold(
-        containerColor = ColorBackground,
         bottomBar = {
-            NavigationBar(
-                containerColor = ColorSurface,
-                tonalElevation = 8.dp
-            ) {
+            NavigationBar {
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("dashboard") },
-                    icon = { Icon(Icons.Outlined.Home, contentDescription = "Home") },
-                    label = { Text("Home", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = ColorOnSurfaceVariant,
-                        unselectedTextColor = ColorOnSurfaceVariant
-                    )
+                    onClick = {
+                        navController.navigate("dashboard") {
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(Icons.Outlined.Home, contentDescription = "Home")
+                    },
+                    label = { Text("Home") }
                 )
+
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("upload_donasi") },
-                    icon = { Icon(Icons.Outlined.AddCircleOutline, contentDescription = "Donate") },
-                    label = { Text("Donate", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = ColorOnSurfaceVariant,
-                        unselectedTextColor = ColorOnSurfaceVariant
-                    )
+                    onClick = {
+                        navController.navigate("upload_donasi") {
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(Icons.Outlined.AddCircleOutline, contentDescription = "Upload")
+                    },
+                    label = { Text("Upload") }
                 )
+
                 NavigationBarItem(
                     selected = true,
-                    onClick = { },
-                    icon = { Icon(Icons.Default.History, contentDescription = "History") },
-                    label = { Text("History", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = ColorSurface,
-                        selectedTextColor = ColorPrimary,
-                        indicatorColor = ColorPrimary,
-                        unselectedIconColor = ColorOnSurfaceVariant,
-                        unselectedTextColor = ColorOnSurfaceVariant
-                    )
+                    onClick = {},
+                    icon = {
+                        Icon(Icons.Default.History, contentDescription = "Riwayat")
+                    },
+                    label = { Text("Riwayat") }
                 )
+
                 NavigationBarItem(
                     selected = false,
-                    onClick = { navController.navigate("profile") },
-                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
-                    label = { Text("Profile", fontSize = 11.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        unselectedIconColor = ColorOnSurfaceVariant,
-                        unselectedTextColor = ColorOnSurfaceVariant
-                    )
+                    onClick = {
+                        navController.navigate("profile") {
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(Icons.Outlined.Person, contentDescription = "Profile")
+                    },
+                    label = { Text("Profile") }
                 )
             }
         }
-    ) { paddingValues ->
+    ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(padding)
+                .padding(16.dp)
         ) {
-            // Top Bar
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Menu,
-                        contentDescription = "Menu",
-                        tint = ColorPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
-                        text = "Riwayat",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorPrimary
+                        text = "Riwayat Donasi",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    Text(
+                        text = "Aktivitas donasi barang layak pakai",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Outlined.Notifications,
-                        contentDescription = "Notifications",
-                        tint = ColorOnSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(ColorOutlineVariant)
-                    ) {
-                        // Dummy avatar image
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = ColorSurface,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
+
+                IconButton(
+                    onClick = {
+                        viewModel.loadHistory()
                     }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh"
+                    )
                 }
             }
 
-            // Tabs
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                containerColor = ColorBackground,
-                contentColor = ColorPrimary,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                        color = ColorPrimary,
-                        height = 3.dp
-                    )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = aktivitasInput,
+                onValueChange = {
+                    aktivitasInput = it
                 },
-                divider = {
-                    HorizontalDivider(color = ColorOutlineVariant.copy(alpha = 0.3f))
+                modifier = Modifier.fillMaxWidth(),
+                label = {
+                    Text("Catat aktivitas riwayat")
+                },
+                placeholder = {
+                    Text("Contoh: Mengunggah barang donasi")
                 }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = {
-                            Text(
-                                text = title,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (selectedTabIndex == index) ColorPrimary else ColorOnSurfaceVariant
-                            )
-                        }
-                    )
-                }
-            }
-            
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Content
-            if (selectedTabIndex == 1) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(klaimList) { item ->
-                        KlaimCard(item)
+            Button(
+                onClick = {
+                    viewModel.addHistory(aktivitasInput)
+                    aktivitasInput = ""
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
+            ) {
+                Text("Tambah Riwayat")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            uiState.errorMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            uiState.successMessage?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
-            } else {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Donasi Saya - Kosong", color = ColorOnSurfaceVariant)
+
+                uiState.historyList.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Belum ada riwayat donasi")
+                    }
+                }
+
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(
+                            items = uiState.historyList,
+                            key = { item -> item.id }
+                        ) { item ->
+                            HistoryRowItem(item = item)
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-data class KlaimItem(
-    val title: String,
-    val status: String,
-    val date: String,
-    val note: String,
-    val noteIcon: androidx.compose.ui.graphics.vector.ImageVector?
-)
-
 @Composable
-fun KlaimCard(item: KlaimItem) {
+fun HistoryRowItem(
+    item: HistoryItem
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = ColorSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Subtle or flat since background has color
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            // Image Box Placeholder
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(ColorOutlineVariant.copy(alpha = 0.3f))
-            ) {
-                Icon(
-                    Icons.Outlined.Image,
-                    contentDescription = null,
-                    tint = ColorOnSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(
-                        text = item.title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ColorOnSurface,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    // Status Badge
-                    val isSuccess = item.status == "BERHASIL"
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = if (isSuccess) ColorPrimary else ColorSurfaceVariant,
-                        modifier = Modifier.padding(top = 2.dp)
-                    ) {
-                        Text(
-                            text = item.status,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isSuccess) ColorSurface else ColorOnSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Klaim pada ${item.date}",
-                    fontSize = 12.sp,
-                    color = ColorOnSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.Top) {
-                    if (item.noteIcon != null) {
-                        Icon(
-                            imageVector = item.noteIcon,
-                            contentDescription = null,
-                            tint = ColorOnSurfaceVariant,
-                            modifier = Modifier
-                                .size(14.dp)
-                                .padding(top = 2.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                    } else {
-                        // Empty spacer for alignment if there is no icon
-                        Spacer(modifier = Modifier.width(20.dp))
-                    }
-                    Text(
-                        text = item.note,
-                        fontSize = 13.sp,
-                        color = ColorOnSurfaceVariant,
-                        fontStyle = if (item.noteIcon != null) FontStyle.Italic else FontStyle.Normal
-                    )
-                }
-            }
+            Text(
+                text = item.aktivitas,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Tanggal: ${formatTanggal(item.tanggal)}",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
+}
+
+fun formatTanggal(tanggal: String?): String {
+    if (tanggal.isNullOrBlank()) return "-"
+
+    return tanggal
+        .replace("T", " ")
+        .substringBefore(".")
 }
