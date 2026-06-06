@@ -52,14 +52,7 @@ fun AppNavigation() {
             RiwayatDonasiScreen(navController = navController)
         }
 
-        // Detail Barang screen with item title argument
-        composable(
-            route = "detail_barang/{itemTitle}",
-            arguments = listOf(navArgument("itemTitle") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val itemTitle = backStackEntry.arguments?.getString("itemTitle") ?: "Unknown Item"
-            DetailBarangScreen(navController = navController, itemTitle = itemTitle)
-        }
+
 
         // Klaim Barang screen with item ID and title argument
         composable(
