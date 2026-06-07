@@ -36,6 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bagiin.viewmodel.DonasiViewModel
+
 
 
 val ColorPrimary = Color(0xFF2563EB)
@@ -67,7 +70,7 @@ fun UploadDonasiScreen(navController: NavController) {
             selectedImageUris = newUris
         }
     }
-
+    val donasiViewModel: DonasiViewModel = viewModel()
     Scaffold(
         containerColor = ColorBackground,
         topBar = {
@@ -89,12 +92,17 @@ fun UploadDonasiScreen(navController: NavController) {
                     .padding(16.dp)
             ) {
                 Button(
-                    onClick = { /* Submit Action */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary)
+                    onClick = {
+
+                        donasiViewModel.submitDonasi(
+                            judul = namaBarang,
+                            deskripsi = deskripsi,
+                            kategori = kategori,
+                            kondisi = kondisi,
+                            lokasi = lokasi
+                        )
+
+                    }
                 ) {
                     Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
