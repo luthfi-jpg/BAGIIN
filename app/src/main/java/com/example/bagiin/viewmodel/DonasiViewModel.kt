@@ -106,14 +106,16 @@ class DonasiViewModel : ViewModel() {
         }
     }
 
-    fun claimDonation(idDonasi: String, alasan: String, onSuccess: () -> Unit) {
+    fun claimDonation(idDonasi: String, alasan: String, onSuccess: (String) -> Unit) {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
             val result = repository.claimDonasi(idDonasi, alasan)
-            result.onSuccess {
-                message.value = it
-                onSuccess()
+            result.onSuccess { claim ->
+                message.value = "Klaim berhasil"
+                onSuccess(
+                    claim.id_klaim ?: ""
+                )
             }
             result.onFailure { error ->
                 errorMessage.value = error.message ?: "Gagal mengajukan klaim"

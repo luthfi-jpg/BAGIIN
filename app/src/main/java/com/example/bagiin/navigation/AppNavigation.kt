@@ -69,11 +69,20 @@ fun AppNavigation() {
 
         // Jadwal Penyerahan screen with item title argument
         composable(
-            route = "jadwal_penyerahan/{itemTitle}",
+            route = "jadwal_penyerahan/{claimId}/{itemTitle}",
             arguments = listOf(navArgument("itemTitle") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val itemTitle = backStackEntry.arguments?.getString("itemTitle") ?: "Unknown Item"
-            JadwalPenyerahanScreen(navController = navController, itemTitle = itemTitle)
+        ) {
+            val claimId =
+                it.arguments?.getString("claimId") ?: ""
+
+            val itemTitle =
+                it.arguments?.getString("itemTitle") ?: ""
+
+            JadwalPenyerahanScreen(
+                navController = navController,
+                claimId = claimId,
+                itemTitle = itemTitle
+            )
         }
     }
 }

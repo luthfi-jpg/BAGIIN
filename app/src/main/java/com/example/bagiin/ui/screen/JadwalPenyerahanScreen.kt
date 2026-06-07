@@ -48,7 +48,7 @@ private val LGSuccessGreenBg = Color(0xFFDCFCE7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String, viewModel: JadwalPenyerahanViewModel = viewModel()) {
+fun JadwalPenyerahanScreen(navController: NavController, claimId: String, itemTitle: String, viewModel: JadwalPenyerahanViewModel = viewModel()) {
     // Text Input States
     val additionalInstructions = viewModel.additionalInstructions
     val selectedDateText = viewModel.selectedDateText
@@ -315,7 +315,11 @@ fun JadwalPenyerahanScreen(navController: NavController, itemTitle: String, view
 
                     // Confirm button
                     Button(
-                        onClick = { viewModel.confirmSchedule() },
+                        onClick = {
+                            viewModel.saveSchedule(
+                                claimId = claimId
+                            )
+                        },
                         modifier = Modifier
                             .weight(1.5f)
                             .height(52.dp),

@@ -115,13 +115,23 @@ fun KlaimBarangScreen(
                     // Ajukan Klaim Button
                     Button(
                         onClick = {
-                            viewModel.claimDonation(idDonasi, claimReason) {
-                                Toast.makeText(context, "Klaim berhasil diajukan!", Toast.LENGTH_SHORT).show()
-                                val finalTitle = donasiDetail?.judul ?: itemTitle
-                                val encodedTitle = URLEncoder.encode(finalTitle, StandardCharsets.UTF_8.toString())
-                                navController.navigate("jadwal_penyerahan/$encodedTitle") {
-                                    popUpTo("dashboard") { inclusive = false }
-                                }
+                            viewModel.claimDonation(
+                                idDonasi,
+                                claimReason
+                            ) { claimId ->
+
+                                val finalTitle =
+                                    donasiDetail?.judul ?: itemTitle
+
+                                val encodedTitle =
+                                    URLEncoder.encode(
+                                        finalTitle,
+                                        StandardCharsets.UTF_8.toString()
+                                    )
+
+                                navController.navigate(
+                                    "jadwal_penyerahan/$claimId/$encodedTitle"
+                                )
                             }
                         },
                         modifier = Modifier
