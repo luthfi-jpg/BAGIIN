@@ -15,7 +15,7 @@ class DonasiRepository {
     suspend fun getDonasi(): Result<List<Donasi>> {
         return try {
             val result = client.from("donasi")
-                .select(Columns.raw("*, donor:users(nama, foto_profil)")) {
+                .select(Columns.raw("*, donor:users(nama, foto_profil, rating)")) {
                     filter {
                         or {
                             eq("status", "tersedia")
@@ -86,13 +86,27 @@ class DonasiRepository {
     suspend fun getDonasiById(id: String): Result<Donasi> {
         return try {
             val result = client.from("donasi")
-                .select(Columns.raw("*, donor:users(nama, foto_profil)")) {
+                .select(Columns.raw("*, donor:users(nama, foto_profil, rating)")) {
                     filter {
                         eq("id_donasi", id)
                     }
                 }
                 .decodeSingle<Donasi>()
             Result.success(result)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getDonationCountByUser(userId: String): Result<Long> {
+        return try {
+            val response = client.from("donasi").select(columns = Columns.raw("id_donasi")) {
+                filter {
+                    eq("id_user", userId)
+                }
+            }
+            val count = response.decodeList<Donasi>().size.toLong()
+            Result.success(count)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -110,7 +124,20 @@ class DonasiRepository {
                 status = "Pending"
             )
 
+            // 1. Insert claim row
             client.from("klaim").insert(claim)
+            
+            // 2. Update status of the donation to 'diklaim'
+            client.from("donasi").update(
+                {
+                    Donasi::status setTo "diklaim"
+                }
+            ) {
+                filter {
+                    eq("id_donasi", idDonasi)
+                }
+            }
+
             Result.success("Klaim berhasil diajukan")
         } catch (e: Exception) {
             Result.failure(e)

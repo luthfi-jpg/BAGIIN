@@ -436,8 +436,9 @@ fun KlaimBarangScreen(
                                     tint = StarYellow,
                                     modifier = Modifier.size(14.dp)
                                 )
+                                val donationCount = viewModel.donorDonationCount.value
                                 Text(
-                                    text = "${donasiDetail?.rating ?: 4.9} (12 Donasi)",
+                                    text = "${donasiDetail?.donor?.rating ?: 5.0} ($donationCount Donasi)",
                                     fontSize = 12.sp,
                                     color = LGOnSurfaceVariant,
                                     fontWeight = FontWeight.Medium

@@ -68,5 +68,6 @@ data class Donasi(
 @Serializable
 data class Donor(
     val nama: String? = null,
-    val foto_profil: String? = null
+    val foto_profil: String? = null,
+    val rating: Double? = 0.0
 )

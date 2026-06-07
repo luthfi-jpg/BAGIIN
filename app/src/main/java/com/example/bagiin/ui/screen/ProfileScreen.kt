@@ -33,6 +33,9 @@ import java.util.Locale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.example.bagiin.R
 import com.example.bagiin.data.SupabaseInstance
 import com.example.bagiin.viewmodel.ProfileViewModel
@@ -63,6 +66,20 @@ fun ProfileScreen(
     val coroutineScope = rememberCoroutineScope()
     val email = SupabaseInstance.client.auth.currentUserOrNull()?.email ?: ""
     val context = LocalContext.current
+
+    // Auto-refresh profile data when screen is focused/resumed
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadProfile()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()

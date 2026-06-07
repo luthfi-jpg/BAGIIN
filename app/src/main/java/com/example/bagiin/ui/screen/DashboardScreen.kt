@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.example.bagiin.R
 import com.example.bagiin.data.SupabaseInstance
 import com.example.bagiin.model.Donasi
@@ -61,9 +64,18 @@ fun DashboardScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Semua") }
 
-    // Refresh data when screen is shown
-    LaunchedEffect(Unit) {
-        donasiViewModel.fetchDonasi()
+    // Auto-refresh data when the screen is focused / resumed
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                donasiViewModel.fetchDonasi()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     val categories = listOf(

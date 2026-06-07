@@ -18,6 +18,7 @@ class DonasiViewModel : ViewModel() {
     var errorMessage = mutableStateOf<String?>(null)
     var donationDetail = mutableStateOf<Donasi?>(null)
     var message = mutableStateOf("")
+    var donorDonationCount = mutableStateOf(0L)
 
     fun deleteDonasi(idDonasi: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
@@ -125,8 +126,14 @@ class DonasiViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             val result = repository.getDonasiById(idDonasi)
-            result.onSuccess {
-                donationDetail.value = it
+            result.onSuccess { donasi ->
+                donationDetail.value = donasi
+                donasi.id_user?.let { userId ->
+                    val countResult = repository.getDonationCountByUser(userId)
+                    countResult.onSuccess { count ->
+                        donorDonationCount.value = count
+                    }
+                }
             }
             result.onFailure { error ->
                 errorMessage.value = error.message ?: "Gagal memuat detail donasi"

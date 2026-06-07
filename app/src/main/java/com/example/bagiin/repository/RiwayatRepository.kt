@@ -3,6 +3,7 @@ package com.example.bagiin.repository
 import com.example.bagiin.data.SupabaseInstance
 import com.example.bagiin.model.Claim
 import com.example.bagiin.model.Donasi
+import com.example.bagiin.model.User
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -53,7 +54,22 @@ class RiwayatRepository {
 
     suspend fun confirmReceipt(idKlaim: String, idDonasi: String, rating: Double): Result<String> {
         return try {
-            // 1. Update status di tabel klaim jadi 'Diterima'
+            // 1. Ambil data donasi untuk mendapatkan id_user donor
+            val donasiResult = client.from("donasi")
+                .select(Columns.ALL) {
+                    filter {
+                        eq("id_donasi", idDonasi)
+                    }
+                }
+                .decodeList<Donasi>()
+
+            if (donasiResult.isEmpty()) {
+                return Result.failure(Exception("Donasi tidak ditemukan"))
+            }
+            val donorId = donasiResult.first().id_user
+                ?: return Result.failure(Exception("Donor tidak ditemukan"))
+
+            // 2. Update status di tabel klaim jadi 'Diterima'
             client.from("klaim").update(
                 {
                     Claim::status setTo "Diterima"
@@ -64,7 +80,7 @@ class RiwayatRepository {
                 }
             }
 
-            // 2. Update status di tabel donasi jadi 'Selesai' dan simpan rating
+            // 3. Update status di tabel donasi jadi 'Selesai' dan simpan rating
             client.from("donasi").update(
                 {
                     Donasi::status setTo "Selesai"
@@ -73,6 +89,33 @@ class RiwayatRepository {
             ) {
                 filter {
                     eq("id_donasi", idDonasi)
+                }
+            }
+
+            // 4. Hitung rata-rata rating baru untuk donor ini
+            val allDonationsWithRating = client.from("donasi")
+                .select(Columns.ALL) {
+                    filter {
+                        eq("id_user", donorId)
+                    }
+                }
+                .decodeList<Donasi>()
+
+            val ratedDonations = allDonationsWithRating.mapNotNull { it.rating }
+            val averageRating = if (ratedDonations.isNotEmpty()) {
+                ratedDonations.average()
+            } else {
+                rating
+            }
+
+            // 5. Update rating di tabel users
+            client.from("users").update(
+                {
+                    User::rating setTo averageRating
+                }
+            ) {
+                filter {
+                    eq("id_user", donorId)
                 }
             }
 
