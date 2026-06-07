@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 
 data class HistoryUiState(
     val historyList: List<HistoryItem> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null
@@ -22,6 +23,20 @@ class HistoryViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
+
+    val filteredHistoryList: List<HistoryItem>
+        get() = _uiState.value.historyList.filter { item ->
+
+            val keyword = _uiState.value.searchQuery
+                .trim()
+                .lowercase()
+
+            keyword.isBlank() ||
+                    item.aktivitas.lowercase().contains(keyword) ||
+                    item.judul_barang.orEmpty().lowercase().contains(keyword) ||
+                    item.status.orEmpty().lowercase().contains(keyword) ||
+                    item.tanggal.orEmpty().lowercase().contains(keyword)
+        }
 
     init {
         loadHistory()
@@ -95,6 +110,38 @@ class HistoryViewModel : ViewModel() {
                     errorMessage = e.message ?: "Gagal menambahkan riwayat"
                 )
             }
+
         }
     }
+
+    fun updateSearchQuery(query: String) {
+        _uiState.value = _uiState.value.copy(searchQuery = query)
+    }
+
+    fun updateHistoryStatus(idRiwayat: Long, status: String) {
+        viewModelScope.launch {
+            try {
+                repository.updateHistoryStatus(idRiwayat, status)
+                loadHistory()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Gagal update riwayat"
+                )
+            }
+        }
+    }
+
+    fun deleteHistory(idRiwayat: Long) {
+        viewModelScope.launch {
+            try {
+                repository.deleteHistory(idRiwayat)
+                loadHistory()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Gagal hapus riwayat"
+                )
+            }
+        }
+    }
+
 }

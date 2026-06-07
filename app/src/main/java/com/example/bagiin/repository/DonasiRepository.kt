@@ -13,15 +13,16 @@ class DonasiRepository {
         deskripsi: String,
         kategori: String,
         kondisi: String,
-        lokasi: String
+        lokasi: String,
+        fotoUrl: List<String> = emptyList()
     ) {
-
         val data = DonasiInsert(
             judul = judul,
             deskripsi = deskripsi,
             kategori = kategori,
             kondisi = kondisi,
-            lokasi = lokasi
+            lokasi = lokasi,
+            foto_url = fotoUrl
         )
 
         client

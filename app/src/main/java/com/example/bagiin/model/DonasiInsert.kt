@@ -9,10 +9,6 @@ data class DonasiInsert(
     val kategori: String? = null,
     val kondisi: String? = null,
     val lokasi: String? = null,
-
-    // sesuai default di database
     val status: String = "tersedia",
-
-    // jsonb [] pada Supabase
     val foto_url: List<String> = emptyList()
 )

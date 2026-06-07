@@ -52,4 +52,28 @@ class HistoryRepository {
             .from("riwayat")
             .insert(data)
     }
+    suspend fun updateHistoryStatus(
+        idRiwayat: Long,
+        status: String
+    ) {
+        client
+            .from("riwayat")
+            .update(
+                mapOf("status" to status)
+            ) {
+                filter {
+                    eq("id_riwayat", idRiwayat)
+                }
+            }
+    }
+
+    suspend fun deleteHistory(idRiwayat: Long) {
+        client
+            .from("riwayat")
+            .delete {
+                filter {
+                    eq("id_riwayat", idRiwayat)
+                }
+            }
+    }
 }

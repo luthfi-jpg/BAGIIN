@@ -27,6 +27,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.bagiin.model.HistoryItem
 import com.example.bagiin.viewmodel.HistoryViewModel
+import androidx.compose.material.icons.filled.Delete
 
 @Composable
 fun RiwayatDonasiScreen(
@@ -34,7 +35,6 @@ fun RiwayatDonasiScreen(
     viewModel: HistoryViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var aktivitasInput by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     Scaffold(
@@ -131,35 +131,20 @@ fun RiwayatDonasiScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = aktivitasInput,
+                value = uiState.searchQuery,
                 onValueChange = {
-                    aktivitasInput = it
+                    viewModel.updateSearchQuery(it)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 label = {
-                    Text("Catat aktivitas riwayat")
+                    Text("Cari riwayat")
                 },
                 placeholder = {
-                    Text("Contoh: Mengunggah barang donasi")
+                    Text("Cari aktivitas, status, tanggal...")
                 }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    viewModel.addHistory(
-                        aktivitas = aktivitasInput,
-                        judulBarang = "Aktivitas Manual",
-                        status = "Tercatat"
-                    )
-                    aktivitasInput = ""
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !uiState.isLoading
-            ) {
-                Text("Tambah Riwayat")
-            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -207,10 +192,15 @@ fun RiwayatDonasiScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(
-                            items = uiState.historyList,
+                            items = viewModel.filteredHistoryList,
                             key = { item -> item.id_riwayat }
                         ) { item ->
-                            HistoryRowItem(item = item)
+                            HistoryRowItem(
+                                item = item,
+                                onDelete = {
+                                    viewModel.deleteHistory(item.id_riwayat)
+                                }
+                            )
                         }
                     }
                 }
@@ -221,7 +211,8 @@ fun RiwayatDonasiScreen(
 
 @Composable
 fun HistoryRowItem(
-    item: HistoryItem
+    item: HistoryItem,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -287,13 +278,27 @@ fun HistoryRowItem(
                 )
             }
 
-            AssistChip(
-                onClick = {},
-                enabled = false,
-                label = {
-                    Text(item.status ?: "-")
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+
+                AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = {
+                        Text(item.status ?: "-")
+                    }
+                )
+
+                IconButton(
+                    onClick = onDelete
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete"
+                    )
                 }
-            )
+            }
         }
     }
 }

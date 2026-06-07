@@ -38,6 +38,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bagiin.viewmodel.DonasiViewModel
+import androidx.compose.runtime.collectAsState
+
 
 
 
@@ -50,7 +52,10 @@ val ColorOutlineVariant = Color(0xFFC3C6D7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UploadDonasiScreen(navController: NavController) {
+fun UploadDonasiScreen(
+    navController: NavController,
+    donasiViewModel: DonasiViewModel = viewModel()
+) {
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var namaBarang by remember { mutableStateOf("") }
     var kategori by remember { mutableStateOf("") }
@@ -59,29 +64,69 @@ fun UploadDonasiScreen(navController: NavController) {
     var deskripsi by remember { mutableStateOf("") }
     var lokasi by remember { mutableStateOf("") }
 
-    val kondisiOptions = listOf("Baru", "Seperti Baru", "Bagus", "Layak Pakai")
-    val kategoriOptions = listOf("Pakaian", "Elektronik", "Buku", "Mainan", "Lainnya")
+    val donasiUiState by donasiViewModel.uiState.collectAsState()
 
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(5)
-    ) { uris ->
-        if (uris.isNotEmpty()) {
-            val newUris = (selectedImageUris + uris).take(5)
-            selectedImageUris = newUris
+    LaunchedEffect(donasiUiState.isSuccess) {
+        if (donasiUiState.isSuccess) {
+            navController.navigate("riwayat") {
+                launchSingleTop = true
+            }
+
+            donasiViewModel.resetSuccess()
         }
     }
-    val donasiViewModel: DonasiViewModel = viewModel()
+
+    val kondisiOptions = listOf(
+        "Baru",
+        "Seperti Baru",
+        "Bagus",
+        "Layak Pakai"
+    )
+
+    val kategoriOptions = listOf(
+        "Pakaian",
+        "Elektronik",
+        "Buku",
+        "Mainan",
+        "Lainnya"
+    )
+
+    val photoPickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickMultipleVisualMedia(5)
+        ) { uris ->
+            if (uris.isNotEmpty()) {
+                selectedImageUris =
+                    (selectedImageUris + uris).take(5)
+            }
+        }
+
     Scaffold(
         containerColor = ColorBackground,
         topBar = {
             TopAppBar(
-                title = { Text("Donasikan Barang", fontWeight = FontWeight.SemiBold, color = ColorOnSurface, fontSize = 18.sp) },
+                title = {
+                    Text(
+                        "Donasikan Barang",
+                        fontWeight = FontWeight.SemiBold,
+                        color = ColorOnSurface,
+                        fontSize = 18.sp
+                    )
+                },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = ColorOnSurface)
+                    IconButton(
+                        onClick = { navController.popBackStack() }
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = ColorOnSurface
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ColorBackground)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = ColorBackground
+                )
             )
         },
         bottomBar = {
@@ -91,22 +136,56 @@ fun UploadDonasiScreen(navController: NavController) {
                     .background(ColorSurface)
                     .padding(16.dp)
             ) {
+
                 Button(
                     onClick = {
-
                         donasiViewModel.submitDonasi(
                             judul = namaBarang,
                             deskripsi = deskripsi,
                             kategori = kategori,
                             kondisi = kondisi,
-                            lokasi = lokasi
+                            lokasi = lokasi,
+                            fotoUrl = selectedImageUris.map {
+                                it.toString()
+                            }
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    enabled = !donasiUiState.isLoading,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ColorPrimary
+                    )
+                ) {
+
+                    if (donasiUiState.isLoading) {
+
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
                         )
 
+                    } else {
+
+                        Icon(
+                            Icons.Default.VolunteerActivism,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+
+                        Spacer(
+                            modifier = Modifier.width(8.dp)
+                        )
+
+                        Text(
+                            text = "Submit Donasi",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
-                ) {
-                    Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Submit Donasi", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
