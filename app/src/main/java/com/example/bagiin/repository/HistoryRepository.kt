@@ -26,16 +26,26 @@ class HistoryRepository {
                 }
             }
             .decodeList<HistoryItem>()
-            .sortedByDescending { it.id }
+            .sortedByDescending { it.id_riwayat }
     }
 
-    suspend fun insertHistory(aktivitas: String) {
+    suspend fun insertHistory(
+        aktivitas: String,
+        idDonasi: String? = null,
+        judulBarang: String? = null,
+        fotoUrl: String? = null,
+        status: String? = null
+    ) {
         val userId = getCurrentUserId()
             ?: throw Exception("User belum login")
 
         val data = HistoryInsert(
+            id_user = userId,
+            id_donasi = idDonasi,
             aktivitas = aktivitas,
-            id_user = userId
+            judul_barang = judulBarang,
+            foto_url = fotoUrl,
+            status = status
         )
 
         client

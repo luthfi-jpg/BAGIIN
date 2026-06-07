@@ -1,12 +1,14 @@
 package com.example.bagiin.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.Home
@@ -14,12 +16,15 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.bagiin.model.HistoryItem
 import com.example.bagiin.viewmodel.HistoryViewModel
 
@@ -143,7 +148,11 @@ fun RiwayatDonasiScreen(
 
             Button(
                 onClick = {
-                    viewModel.addHistory(aktivitasInput)
+                    viewModel.addHistory(
+                        aktivitas = aktivitasInput,
+                        judulBarang = "Aktivitas Manual",
+                        status = "Tercatat"
+                    )
                     aktivitasInput = ""
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -199,7 +208,7 @@ fun RiwayatDonasiScreen(
                     ) {
                         items(
                             items = uiState.historyList,
-                            key = { item -> item.id }
+                            key = { item -> item.id_riwayat }
                         ) { item ->
                             HistoryRowItem(item = item)
                         }
@@ -215,21 +224,75 @@ fun HistoryRowItem(
     item: HistoryItem
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
-            Text(
-                text = item.aktivitas,
-                style = MaterialTheme.typography.titleMedium
-            )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            if (!item.foto_url.isNullOrBlank()) {
 
-            Text(
-                text = "Tanggal: ${formatTanggal(item.tanggal)}",
-                style = MaterialTheme.typography.bodySmall
+                AsyncImage(
+                    model = item.foto_url,
+                    contentDescription = item.judul_barang,
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+            } else {
+
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = null
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+                    text = item.judul_barang ?: "-",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = item.aktivitas,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "Tanggal: ${formatTanggal(item.tanggal)}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            AssistChip(
+                onClick = {},
+                enabled = false,
+                label = {
+                    Text(item.status ?: "-")
+                }
             )
         }
     }

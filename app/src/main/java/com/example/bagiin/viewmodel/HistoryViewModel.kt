@@ -51,7 +51,13 @@ class HistoryViewModel : ViewModel() {
         }
     }
 
-    fun addHistory(aktivitas: String) {
+    fun addHistory(
+        aktivitas: String,
+        idDonasi: String? = null,
+        judulBarang: String? = null,
+        fotoUrl: String? = null,
+        status: String? = null
+    ) {
         if (aktivitas.isBlank()) {
             _uiState.value = _uiState.value.copy(
                 errorMessage = "Aktivitas tidak boleh kosong"
@@ -67,14 +73,21 @@ class HistoryViewModel : ViewModel() {
             )
 
             try {
-                repository.insertHistory(aktivitas.trim())
+                repository.insertHistory(
+                    aktivitas = aktivitas.trim(),
+                    idDonasi = idDonasi,
+                    judulBarang = judulBarang,
+                    fotoUrl = fotoUrl,
+                    status = status
+                )
+
+                val data = repository.getHistoryByCurrentUser()
 
                 _uiState.value = _uiState.value.copy(
+                    historyList = data,
                     isLoading = false,
                     successMessage = "Riwayat berhasil ditambahkan"
                 )
-
-                loadHistory()
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 
+
 val ColorPrimary = Color(0xFF2563EB)
 val ColorBackground = Color(0xFFF8F9FF)
 val ColorSurface = Color(0xFFFFFFFF)
