@@ -98,10 +98,15 @@ class DonasiRepository {
         }
     }
 
-    suspend fun claimDonasi(idDonasi: String, alasan: String): Result<String> {
+    suspend fun claimDonasi(
+        idDonasi: String,
+        alasan: String
+    ): Result<Claim> {
         return try {
             val userId = client.auth.currentUserOrNull()?.id
-                ?: return Result.failure(Exception("User tidak ditemukan"))
+                ?: return Result.failure(
+                    Exception("User tidak ditemukan")
+                )
 
             val claim = Claim(
                 id_donasi = idDonasi,
@@ -110,8 +115,16 @@ class DonasiRepository {
                 status = "Pending"
             )
 
-            client.from("klaim").insert(claim)
-            Result.success("Klaim berhasil diajukan")
+            val insertedClaim =
+                client
+                    .from("klaim")
+                    .insert(claim) {
+                        select()
+                    }
+                    .decodeSingle<Claim>()
+
+            Result.success(insertedClaim)
+
         } catch (e: Exception) {
             Result.failure(e)
         }

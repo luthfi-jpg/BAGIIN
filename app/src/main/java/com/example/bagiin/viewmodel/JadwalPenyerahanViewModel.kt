@@ -1,11 +1,15 @@
 package com.example.bagiin.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.bagiin.data.model.JadwalPenyerahan
+import com.example.bagiin.data.repository.JadwalRepository
+import kotlinx.coroutines.launch
 
 class JadwalPenyerahanViewModel : ViewModel() {
+
+    private val repository = JadwalRepository()
 
     var additionalInstructions by mutableStateOf("")
         private set
@@ -17,6 +21,9 @@ class JadwalPenyerahanViewModel : ViewModel() {
         private set
 
     var showSuccessDialog by mutableStateOf(false)
+        private set
+
+    var jadwalList by mutableStateOf<List<JadwalPenyerahan>>(emptyList())
         private set
 
     fun updateInstructions(text: String) {
@@ -31,8 +38,35 @@ class JadwalPenyerahanViewModel : ViewModel() {
         selectedTimeText = time
     }
 
-    fun confirmSchedule() {
-        showSuccessDialog = true
+    fun saveSchedule(
+        claimId: String
+    ) {
+
+        viewModelScope.launch {
+
+            val jadwal =
+                JadwalPenyerahan(
+                    id_klaim = claimId,
+                    tanggal = selectedDateText,
+                    waktu = selectedTimeText,
+                    instruksi = additionalInstructions,
+                    status = "menunggu"
+                )
+
+            repository.insertJadwal(jadwal)
+
+            showSuccessDialog = true
+
+            loadSchedules()
+        }
+    }
+
+    fun loadSchedules() {
+
+        viewModelScope.launch {
+
+            jadwalList = repository.getAllJadwal()
+        }
     }
 
     fun dismissDialog() {
