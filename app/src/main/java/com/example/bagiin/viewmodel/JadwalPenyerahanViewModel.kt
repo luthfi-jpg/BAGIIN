@@ -41,31 +41,33 @@ class JadwalPenyerahanViewModel : ViewModel() {
     fun saveSchedule(
         claimId: String
     ) {
-
         viewModelScope.launch {
+            try {
+                val jadwal =
+                    JadwalPenyerahan(
+                        id_klaim = claimId,
+                        tanggal = selectedDateText,
+                        waktu = selectedTimeText,
+                        instruksi = additionalInstructions,
+                        status = "menunggu"
+                    )
 
-            val jadwal =
-                JadwalPenyerahan(
-                    id_klaim = claimId,
-                    tanggal = selectedDateText,
-                    waktu = selectedTimeText,
-                    instruksi = additionalInstructions,
-                    status = "menunggu"
-                )
-
-            repository.insertJadwal(jadwal)
-
-            showSuccessDialog = true
-
-            loadSchedules()
+                repository.insertJadwal(jadwal)
+                showSuccessDialog = true
+                loadSchedules()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     fun loadSchedules() {
-
         viewModelScope.launch {
-
-            jadwalList = repository.getAllJadwal()
+            try {
+                jadwalList = repository.getAllJadwal()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

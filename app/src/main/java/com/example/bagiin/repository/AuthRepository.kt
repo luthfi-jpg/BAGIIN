@@ -21,30 +21,24 @@ class AuthRepository {
             val cleanPassword = password.trim()
 
             // 1. Sign up ke Supabase Auth
-            client.auth.signUpWith(Email) {
+            val response = client.auth.signUpWith(Email) {
                 this.email = cleanEmail
                 this.password = cleanPassword
             }
 
-            // 2. Ambil ID User yang baru didaftarkan
-            // Jika "Confirm Email" aktif di Supabase, currentUserOrNull() akan bernilai null
-            // karena session belum dibuat sampai email dikonfirmasi.
-            val userId = client.auth.currentUserOrNull()?.id
+            // 2. Ambil ID User yang baru didaftarkan langsung dari response
+            val userId = response?.id
+                ?: return Result.failure(Exception("Gagal mendaftarkan akun (ID tidak ditemukan)"))
 
-            if (userId != null) {
-                // 3. Masukkan data ke tabel 'users'
-                val user = User(
-                    id_user = userId,
-                    nama = nama,
-                    email = cleanEmail,
-                    no_hp = noHp
-                )
-                client.from("users").insert(user)
-                Result.success("Register berhasil")
-            } else {
-                // Jika userId null, biasanya karena email confirmation menyala
-                Result.success("Register berhasil! Silakan cek email untuk verifikasi.")
-            }
+            // 3. Masukkan data ke tabel 'users'
+            val user = User(
+                id_user = userId,
+                nama = nama,
+                email = cleanEmail,
+                no_hp = noHp
+            )
+            client.from("users").insert(user)
+            Result.success("Register berhasil")
 
         } catch (e: Exception) {
             e.printStackTrace()
