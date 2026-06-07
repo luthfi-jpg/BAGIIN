@@ -140,15 +140,8 @@ fun RiwayatDonasiScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Menu,
-                        contentDescription = "Menu",
-                        tint = ColorPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = "Riwayat",
+                        text = "History",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = ColorPrimary

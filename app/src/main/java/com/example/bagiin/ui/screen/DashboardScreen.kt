@@ -333,27 +333,6 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Section title
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Donasi Terbaru",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = OnBackground
-                    )
-                    TextButton(onClick = { navController.navigate("daftar_barang") }) {
-                        Text("Lihat Semua", color = LGPrimary, fontSize = 14.sp)
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
 
             // Donation Items
             if (isLoadingDonasi) {

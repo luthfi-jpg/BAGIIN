@@ -42,10 +42,12 @@ class ProfileViewModel : ViewModel() {
 
     private fun loadDonationCount() {
         viewModelScope.launch {
-            val result = donasiRepository.getDonasi()
-            result.onSuccess { list ->
-                val userId = user.value?.id_user
-                donationCount.intValue = list.count { it.id_user == userId }
+            val userId = user.value?.id_user
+            if (userId != null) {
+                val result = donasiRepository.getDonationCountByUser(userId)
+                result.onSuccess { count ->
+                    donationCount.intValue = count.toInt()
+                }
             }
         }
     }
