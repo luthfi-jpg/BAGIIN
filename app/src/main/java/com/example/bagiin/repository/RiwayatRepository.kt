@@ -39,7 +39,12 @@ class RiwayatRepository {
             // Dalam implementasi nyata, kita mungkin butuh join dengan tabel donasi
             // Tapi untuk sekarang kita ambil data klaim dasarnya dulu
             val result = client.from("klaim")
-                .select(Columns.ALL) {
+                .select(
+                    Columns.raw("""
+                     *,
+                     donasi(*)
+                """.trimIndent())
+                ) {
                     filter {
                         eq("id_user", userId)
                     }
